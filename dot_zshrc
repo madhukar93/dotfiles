@@ -1,0 +1,207 @@
+#zmodload zsh/zprof
+# If you come from bash you might have to change your $PATH.
+# export PATH=$HOME/bin:/usr/local/bin:$PATH
+
+# Path to your oh-my-zsh installation.
+export ZSH="$HOME/.oh-my-zsh"
+export GOBIN="$HOME/go/bin"
+
+# Set name of the theme to load --- if set to "random", it will
+# load a random theme each time oh-my-zsh is loaded, in which case,
+# to know which specific one was loaded, run: echo $RANDOM_THEME
+# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
+ZSH_THEME="robbyrussell"
+#ZSH_THEME="powerlevel10k"
+
+# Set list of themes to pick from when loading at random
+# Setting this variable when ZSH_THEME=random will cause zsh to load
+# a theme from this variable instead of looking in $ZSH/themes/
+# If set to an empty array, this variable will have no effect.
+# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
+
+# Uncomment the following line to use case-sensitive completion.
+# CASE_SENSITIVE="true"
+
+# Uncomment the following line to use hyphen-insensitive completion.
+# Case-sensitive completion must be off. _ and - will be interchangeable.
+# HYPHEN_INSENSITIVE="true"
+
+# Uncomment the following line to disable bi-weekly auto-update checks.
+# DISABLE_AUTO_UPDATE="true"
+
+# Uncomment the following line to automatically update without prompting.
+# DISABLE_UPDATE_PROMPT="true"
+
+# Uncomment the following line to change how often to auto-update (in days).
+# export UPDATE_ZSH_DAYS=13
+
+# Uncomment the following line if pasting URLs and other text is messed up.
+# DISABLE_MAGIC_FUNCTIONS="true"
+
+# Uncomment the following line to disable colors in ls.
+# DISABLE_LS_COLORS="true"
+
+# Uncomment the following line to disable auto-setting terminal title.
+# DISABLE_AUTO_TITLE="true"
+
+# Uncomment the following line to enable command auto-correction.
+# ENABLE_CORRECTION="true"
+
+# Uncomment the following line to display red dots whilst waiting for completion.
+# COMPLETION_WAITING_DOTS="true"
+
+# Uncomment the following line if you want to disable marking untracked files
+# under VCS as dirty. This makes repository status check for large repositories
+# much, much faster.
+# DISABLE_UNTRACKED_FILES_DIRTY="true"
+
+# Uncomment the following line if you want to change the command execution time
+# stamp shown in the history command output.
+# You can set one of the optional three formats:
+# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
+# or set a custom format using the strftime function format specifications,
+# see 'man strftime' for details.
+# HIST_STAMPS="mm/dd/yyyy"
+
+# Would you like to use another custom folder than $ZSH/custom?
+# ZSH_CUSTOM=/path/to/new-custom-folder
+
+# Which plugins would you like to load?
+# Standard plugins can be found in $ZSH/plugins/
+# Custom plugins may be added to $ZSH_CUSTOM/plugins/
+# Example format: plugins=(rails git textmate ruby lighthouse)
+# Add wisely, as too many plugins slow down shell startup.
+plugins=(you-should-use git tmux docker vi-mode z kubectl macos dotenv gcloud terraform aws zsh-completions direnv zsh-nvm)
+
+bindkey '^X' create_completion
+# User configuration
+
+# export MANPATH="/usr/local/man:$MANPATH"
+
+# You may need to manually set your language environment
+# export LANG=en_US.UTF-8
+
+# Preferred editor for local and remote sessions
+# if [[ -n $SSH_CONNECTION ]]; then
+#   export EDITOR='vim'
+# else
+#   export EDITOR='mvim'
+# fi
+
+# Compilation flags
+# export ARCHFLAGS="-arch x86_64"
+
+# Set personal aliases, overriding those provided by oh-my-zsh libs,
+# plugins, and themes. Aliases can be placed here, though oh-my-zsh
+# users are encouraged to define aliases within the ZSH_CUSTOM folder.
+# For a full list of active aliases, run `alias`.
+#
+# Example aliases
+# alias zshconfig="mate ~/.zshrc"
+# alias ohmyzsh="mate ~/.oh-my-zsh"
+
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.histfile
+HISTSIZE=10000
+SAVEHIST=10000
+setopt autocd extendedglob nomatch
+bindkey -v
+# End of lines configured by zsh-newuser-install
+# The following lines were added by compinstall
+zstyle :compinstall filename '$HOME/.zshrc'
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+export EDITOR="nvim"
+export ANDROID_SDK_ROOT=$HOME/Library/Android/sdk
+export PATH=$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/platform-tools:$PATH
+bindkey '^N' autosuggest-accept
+
+ZSH_THEME="robbyrussell"
+source $ZSH/oh-my-zsh.sh
+
+# https://github.com/nvm-sh/nvm/issues/2724#issuecomment-1097815269
+export NVM_DIR="$HOME/.nvm"
+#[ -s "/usr/local/opt/nvm/nvm.sh" ] && \. "/usr/local/opt/nvm/nvm.sh"  # This loads nvm
+#[ -s "/usr/local/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/usr/local/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+
+alias amend="git commit --all --amend --no-verify"
+alias elastic-hq="docker run -p 5000:5000 -e url=http://elasticsearch-search-prod.grofers.com:9200 elastichq/elasticsearch-hq"
+alias fixup="git commit --no-verify -am fixup"
+alias gu="ggpull --ff-only"
+alias tf=terraform
+alias kubens="kubectl config set-context --current --namespace"
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+export PATH="/usr/local/opt/openjdk@11/bin:$PATH"
+
+export PATH="/usr/local/opt/postgresql@11/bin:$PATH"
+
+export FZF_DEFAULT_COMMAND='rg --hidden --files'
+
+export FLUX_FORWARD_NAMESPACE=flux
+
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+export PATH="$PATH:$HOME/.rvm/bin"
+export DOCKER_BUILDKIT=1
+alias mdless="mdcat -p "
+export COMPOSE_DOCKER_CLI_BUILD=1
+alias gcleanb="git for-each-ref --format '%(refname:short)' refs/heads | grep -v master | xargs git branch -D"
+alias cat="bat"
+if [ -e $HOME/.nix-profile/etc/profile.d/nix.sh ]; then . $HOME/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
+export PATH="$HOME/bin:$PATH"
+alias kapis="kubectl get apiservices --template='{{range $api := .items}}{{range $api.status.conditions}}{{if eq .type \"Available\"}}{{$api.metadata.name}} {{.status}}{{"\n"}}{{end}}{{end}}{{end}}'"
+alias kctx="kubectl config use-context"
+export PATH="/usr/local/sbin:$PATH"
+export PATH="$PATH:$GOBIN"
+export KUBECTL_EXTERNAL_DIFF='dyff between --color=on --omit-header --set-exit-code'
+
+function cb_argocd_pass {
+	kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d | pbcopy
+}
+
+function cb_grafana_pass {
+	kubectl get secret monitoring-grafana -o jsonpath="{.data.admin-password}" -n monitoring | base64 -d | pbcopy
+}
+
+alias kall="kubectl api-resources --verbs=list --namespaced -o name | xargs -n 1 kubectl get --show-kind --ignore-not-found"
+CLOUDSDK_PYTHON=/usr/bin/python2
+alias kust='kustomize --load-restrictor=LoadRestrictionsNone'
+alias argocd='argocd --port-forward --port-forward-namespace argocd --plaintext --insecure'
+
+function k_delete_ns {
+	trap "exit" INT TERM ERR
+	trap "kill 0" EXIT
+	NAMESPACE=$1
+	kubectl proxy &
+	kubectl get namespace $NAMESPACE -o json |jq '.spec = {"finalizers":[]}' >temp.json
+	curl -k -H "Content-Type: application/json" -X PUT --data-binary @temp.json 127.0.0.1:8001/api/v1/namespaces/$NAMESPACE/finalize
+	wait
+}
+
+export GOPATH="$HOME/go"
+
+alias python=python3
+
+# export PHPENV_ROOT="$HOME/.phpenv"
+# if [ -d "${PHPENV_ROOT}" ]; then
+# 	export PATH="${PHPENV_ROOT}/bin:${PATH}"
+# 	eval "$(phpenv init -)"
+# fi
+
+export LDFLAGS="-L/usr/local/opt/openssl@3/lib"
+export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
+#zprof
+export GPG_TTY=$(tty)
+source <(stern --completion=zsh)
+
+if [[ $(uname) == "darwin" ]]; then
+  source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
+  export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+fi

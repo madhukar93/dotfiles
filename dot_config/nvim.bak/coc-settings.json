@@ -1,0 +1,51 @@
+{
+  "workspace.ignoredFolders": ["$HOME", "$HOME/.cargo/**", "$HOME/.rustup/**"],
+  "rust-analyzer.server.path": "$HOME/.cargo/bin/rust-analyzer",
+  "coc.preferences.formatOnSave": true,
+  "explorer.icon.enableNerdfont": true,
+  "explorer.icon.source": "vim-devicons",
+  "languageserver": {
+    "terraform": {
+      "command": "terraform-ls",
+      "args": ["serve"],
+      "filetypes": ["terraform", "tf"],
+      "initializationOptions": {},
+      "settings": {}
+    },
+    "bash": {
+      "command": "bash-language-server",
+      "args": ["start"],
+      "filetypes": ["sh"],
+      "ignoredRootPaths": ["~"]
+    }
+  },
+  "go.goplsOptions": {
+    "completeUnimported": true
+  },
+  "diagnostic-languageserver.trace.server": "verbose",
+  "diagnostic-languageserver.filetypes": {
+    // lint `sh` (includes `bash`) files
+    "sh": "shellcheck",
+    "markdown": ["write-good", "markdownlint"]
+  },
+  "diagnostic-languageserver.formatFiletypes": {
+    // format `sh` (includes `bash`) files using formatter defined below
+    "sh": "shfmt"
+  },
+  "diagnostic-languageserver.formatters": {
+    // define our formatter so that we can reference it from
+    // `diagnostic-languageserver.formatFiletypes`
+    "shfmt": {
+      "command": "shfmt",
+      // all the below args are entirely optional
+      // primarily listed here to call out that flags which take an
+      // argument (such as `-i <num-spaces>` for specifying indentation)
+      // should be split into two strings, the flag and then the value
+      "args": ["-i", "2", "-bn", "-ci", "-sr"]
+    }
+  },
+  "diagnostic-languageserver.linters": {},
+  // https://thoughtbot.com/blog/modern-typescript-and-react-development-in-vim
+  "eslint.autoFixOnSave": true,
+  "snippets.ultisnips.pythonPrompt": false
+}
