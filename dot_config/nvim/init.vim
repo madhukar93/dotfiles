@@ -11,7 +11,6 @@ Plug 'junegunn/fzf.vim'
 Plug 'jremmen/vim-ripgrep'
 Plug 'vim-scripts/auto-pairs-gentle'
 Plug 'airblade/vim-gitgutter'
-"Plug 'majutsushi/tagbar'
 Plug 'altercation/vim-colors-solarized'
 Plug 'vim-airline/vim-airline'
 Plug 'editorconfig/editorconfig-vim'
@@ -29,7 +28,6 @@ Plug 'vimwiki/vimwiki'
 Plug 'LnL7/vim-nix'
 Plug 'madhukar93/vim-tmux-navigator'
 Plug 'tmux-plugins/vim-tmux'
-Plug 'tmux-plugins/vim-tmux-focus-events'
 Plug 'wellle/tmux-complete.vim'
 Plug 'preservim/nerdcommenter'
 Plug 'lambdalisue/suda.vim'
@@ -37,8 +35,7 @@ Plug 'Shougo/neco-vim'
 Plug 'jpalardy/vim-slime'
 Plug 'martinda/Jenkinsfile-vim-syntax'
 Plug 'luochen1990/rainbow'
-
-"Plug 'voldikss/vim-floaterm'
+Plug 'preservim/vimux'
 
 Plug 'hashivim/vim-terraform'
 Plug 'andrewstuart/vim-kubernetes'
@@ -62,10 +59,15 @@ Plug 'psliwka/vim-smoothie'
 Plug 'vim-test/vim-test'
 Plug 'f-person/auto-dark-mode.nvim'
 
+Plug 'lifepillar/pgsql.vim'
+Plug 'tpope/vim-dadbod'
+Plug 'puremourning/vimspector'
+Plug 'pearofducks/ansible-vim'
+Plug 'petobens/poet-v'
+
 call plug#end()
 
-let g:coc_global_extensions = ['coc-browser','coc-diagnostic','coc-docker','coc-eslint','coc-explorer','coc-json','coc-prettier','coc-pyright','coc-sh','coc-snippets','coc-solargraph','coc-tsserver','coc-vimlsp','coc-yaml','coc-yank', 'coc-go', 'coc-phpls']
-
+let g:coc_global_extensions = ['coc-browser','coc-diagnostic','coc-docker','coc-eslint','coc-explorer','coc-json','coc-prettier','coc-pyright','coc-sh','coc-snippets','coc-solargraph','coc-tsserver','coc-vimlsp','coc-yaml','coc-yank', 'coc-go', 'coc-phpls', 'coc-db', '@yaegassy/coc-ansible', 'coc-fish']
 
 set foldmethod=marker
 let mapleader = " "
@@ -74,7 +76,7 @@ let g:seoul256_background = 233
 let g:airline_powerline_fonts = 1
 
 " autopairs config
-let g:AutoPairsUseInsertedCount = 1
+let g:AutoPairsShortcutBackInsert = '<M-b>'
 
 set autowrite
 
@@ -163,7 +165,7 @@ set incsearch
 " autosave after updatetime
 augroup MyAutoSave
     autocmd!
-    autocmd CursorHold,CursorHoldI * if &filetype != "" | update | endif
+    autocmd CursorHold,CursorHoldI * if &filetype != "" && &buftype != "prompt" | update | endif
 augroup END
 
 " from coc README
@@ -185,14 +187,14 @@ set shortmess+=c
 set signcolumn=yes
 set statusline^=%{coc#status()}
 
-" Use tab for trigger completion with characters ahead and navigate.
-" NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
-" other plugin before putting this into your config.
-" inoremap <silent><expr> <TAB>
-"       \ coc#pum#visible() ? coc#pum#next(1):
-"       \ CheckBackspace() ? "\<Tab>" :
-"       \ coc#refresh()
-" inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+"Use tab for trigger completion with characters ahead and navigate.
+"NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
+"other plugin before putting this into your config.
+inoremap <silent><expr> <TAB>
+      \ coc#pum#visible() ? coc#pum#next(1):
+      \ CheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
 
 function! CheckBackspace() abort
   let col = col('.') - 1
@@ -236,9 +238,6 @@ function! s:show_hover_doc()
   call timer_start(500, 'ShowDocIfNoDiagnostic')
 endfunction
 
-autocmd CursorHoldI * :call <SID>show_hover_doc()
-autocmd CursorHold * :call <SID>show_hover_doc()
-
 nnoremap <silent> <leader>a  :<C-u>CocList diagnostics<cr>
 " Manage extensions
 nnoremap <silent> <leader>e  :<C-u>CocList extensions<cr>
@@ -276,6 +275,8 @@ nnoremap <C-s> :wq!<cr>
 " quit discarding changes
 inoremap <C-q> <esc>:qa!<cr>
 nnoremap <C-q> :qa!<cr>
+inoremap <C-c> <esc>:q!<cr>
+nnoremap <C-c> :q!<cr>
 
 "golang
 autocmd BufWritePre *.go :silent call CocAction('runCommand', 'editor.action.organizeImport')
@@ -341,6 +342,26 @@ let g:firenvim_config = {
       \    },
       \  }
 
+imap <silent><script><expr> <C-f> copilot#Accept("\<CR>")
+let g:copilot_no_tab_map = v:true
+
+let g:vimspector_enable_mappings = 'HUMAN'
+let g:vimspector_install_gadgets = [ 'delve' ]
+" for normal mode - the word under the cursor
+nmap <Leader>di <Plug>VimspectorBalloonEval
+" for visual mode, the visually selected text
+xmap <Leader>di <Plug>VimspectorBalloonEval
+nmap <Leader><F11> <Plug>VimspectorUpFrame
+nmap <Leader><F12> <Plug>VimspectorDownFrame
+nmap <Leader>B     <Plug>VimspectorBreakpoints
+nmap <Leader>D     <Plug>VimspectorDisassemble
+"nmap <Esc> :call coc#util#float_hide() <CR>
+
+let g:NERDDefaultAlign = 'left'
+let g:NERDSpaceDelims = 1
+let g:loaded_perl_provider = 0
+
+
 lua << EOF
 local auto_dark_mode = require('auto-dark-mode')
 auto_dark_mode.setup({
@@ -356,5 +377,3 @@ auto_dark_mode.setup({
 })
 auto_dark_mode.init()
 EOF
-
-" nmap <Esc> :call coc#util#float_hide() <CR>
