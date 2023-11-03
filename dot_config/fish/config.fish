@@ -58,5 +58,4 @@ alias krsd 'k rollout status deployment'
 alias kru 'k rollout undo'
 alias ksd 'k scale deployment'
 
-
-
+source (kubebuilder completion fish | psub)
