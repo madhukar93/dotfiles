@@ -69,6 +69,7 @@ call plug#end()
 
 let g:coc_global_extensions = ['coc-browser','coc-diagnostic','coc-docker','coc-eslint','coc-explorer','coc-json','coc-prettier','coc-pyright','coc-sh','coc-snippets','coc-solargraph','coc-tsserver','coc-vimlsp','coc-yaml','coc-yank', 'coc-go', 'coc-phpls', 'coc-db', '@yaegassy/coc-ansible', 'coc-fish']
 
+set encoding=UTF-8
 set foldmethod=marker
 let mapleader = " "
 let g:seoul256_background = 233
@@ -344,6 +345,9 @@ let g:firenvim_config = {
 
 imap <silent><script><expr> <C-f> copilot#Accept("\<CR>")
 let g:copilot_no_tab_map = v:true
+let g:copilot_filetypes = {
+    \ '*' : v:true,
+    \ }
 
 let g:vimspector_enable_mappings = 'HUMAN'
 let g:vimspector_install_gadgets = [ 'delve' ]
