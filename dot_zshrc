@@ -192,12 +192,13 @@ export GOPATH="/Users/madhukar/go"
 
 alias python=python3
 
-export PHPENV_ROOT="/Users/madhukar/.phpenv"
-if [ -d "${PHPENV_ROOT}" ]; then
-	export PATH="${PHPENV_ROOT}/bin:${PATH}"
-	eval "$(phpenv init -)"
-fi
+# export PHPENV_ROOT="/Users/madhukar/.phpenv"
+# if [ -d "${PHPENV_ROOT}" ]; then
+# 	export PATH="${PHPENV_ROOT}/bin:${PATH}"
+# 	eval "$(phpenv init -)"
+# fi
 
 export LDFLAGS="-L/usr/local/opt/openssl@3/lib"
 export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
 #zprof
+export GPG_TTY=$(tty)
