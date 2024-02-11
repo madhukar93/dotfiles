@@ -3,7 +3,8 @@
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-export ZSH="/Users/madhukar/.oh-my-zsh"
+export ZSH="$HOME/.oh-my-zsh"
+export GOBIN="$HOME/go/bin"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -107,7 +108,7 @@ setopt autocd extendedglob nomatch
 bindkey -v
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall
-zstyle :compinstall filename '/Users/madhukar/.zshrc'
+zstyle :compinstall filename '$HOME/.zshrc'
 
 autoload -Uz compinit
 compinit
@@ -153,13 +154,11 @@ alias mdless="mdcat -p "
 export COMPOSE_DOCKER_CLI_BUILD=1
 alias gcleanb="git for-each-ref --format '%(refname:short)' refs/heads | grep -v master | xargs git branch -D"
 alias cat="bat"
-if [ -e /Users/madhukar/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/madhukar/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
-export PATH="/Users/madhukar/bin:$PATH"
-source <(stern --completion=zsh)
+if [ -e $HOME/.nix-profile/etc/profile.d/nix.sh ]; then . $HOME/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
+export PATH="$HOME/bin:$PATH"
 alias kapis="kubectl get apiservices --template='{{range $api := .items}}{{range $api.status.conditions}}{{if eq .type \"Available\"}}{{$api.metadata.name}} {{.status}}{{"\n"}}{{end}}{{end}}{{end}}'"
 alias kctx="kubectl config use-context"
 export PATH="/usr/local/sbin:$PATH"
-export GOBIN="/Users/madhukar/go/bin"
 export PATH="$PATH:$GOBIN"
 export KUBECTL_EXTERNAL_DIFF='dyff between --color=on --omit-header --set-exit-code'
 
@@ -186,13 +185,11 @@ function k_delete_ns {
 	wait
 }
 
-export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
-export GOPATH="/Users/madhukar/go"
+export GOPATH="$HOME/go"
 
 alias python=python3
 
-# export PHPENV_ROOT="/Users/madhukar/.phpenv"
+# export PHPENV_ROOT="$HOME/.phpenv"
 # if [ -d "${PHPENV_ROOT}" ]; then
 # 	export PATH="${PHPENV_ROOT}/bin:${PATH}"
 # 	eval "$(phpenv init -)"
@@ -202,3 +199,9 @@ export LDFLAGS="-L/usr/local/opt/openssl@3/lib"
 export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
 #zprof
 export GPG_TTY=$(tty)
+source <(stern --completion=zsh)
+
+if [[ $(uname) == "darwin" ]]; then
+  source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
+  export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+fi
