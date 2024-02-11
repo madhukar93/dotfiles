@@ -65,9 +65,11 @@ Plug 'puremourning/vimspector'
 Plug 'pearofducks/ansible-vim'
 Plug 'petobens/poet-v'
 
+Plug 'rust-lang/rust.vim'
+
 call plug#end()
 
-let g:coc_global_extensions = ['coc-browser','coc-diagnostic','coc-docker','coc-eslint','coc-explorer','coc-json','coc-prettier','coc-pyright','coc-sh','coc-snippets','coc-solargraph','coc-tsserver','coc-vimlsp','coc-yaml','coc-yank', 'coc-go', 'coc-phpls', 'coc-db', '@yaegassy/coc-ansible', 'coc-fish']
+let g:coc_global_extensions = ['coc-browser','coc-diagnostic','coc-docker','coc-eslint','coc-explorer','coc-json','coc-prettier','coc-pyright','coc-sh','coc-snippets','coc-solargraph','coc-tsserver','coc-vimlsp','coc-yaml','coc-yank', 'coc-go', 'coc-phpls', 'coc-db', '@yaegassy/coc-ansible', 'coc-fish', 'coc-rust-analyzer']
 
 set encoding=UTF-8
 set foldmethod=marker
