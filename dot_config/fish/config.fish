@@ -18,16 +18,6 @@ direnv hook fish | source
 set -gx EDITOR nvim
 
 set -gx fish_tmux_autoquit false
-set -gx KUBECONFIG "$HOME/.kube/config:$HOME/.kube/config-k3s-baremetal:$HOME/.kube/config-k3s-neevcloud"
-# set -gx KUBECONFIG "$HOME/.kube/config:$HOME/.kube/config-k3s-baremetal"
-# export GPG_TTY=$(tty)
-set -gx GPG_TTY (tty)
-
-set -gx FZF_DEFAULT_COMMAND "fd -a . (pwd)"
-
-function tigf
-   tig (fzf)
-end
 
 # kubectl aliases
 alias k kubectl
@@ -69,6 +59,3 @@ alias kru 'k rollout undo'
 alias ksd 'k scale deployment'
 
 source (kubebuilder completion fish | psub)
-
-# Created by `pipx` on 2024-01-11 17:43:47
-set PATH $PATH /Users/madhukar/.local/bin
