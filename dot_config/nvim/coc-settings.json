@@ -1,5 +1,7 @@
 {
-	"coc.preferences.formatOnSave": true,
+  "workspace.ignoredFolders": ["$HOME", "$HOME/.cargo/**", "$HOME/.rustup/**"],
+  "rust-analyzer.server.path": "$HOME/.cargo/bin/rust-analyzer",
+  "coc.preferences.formatOnSave": true,
   "explorer.icon.enableNerdfont": true,
   "explorer.icon.source": "vim-devicons",
   "languageserver": {
