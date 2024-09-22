@@ -6,7 +6,7 @@ local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smar
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
-config.default_prog = { "/home/linuxbrew/.linuxbrew/bin/fish", "-l" }
+config.default_prog = { "/opt/homebrew/bin/fish", "-l" }
 
 config.font = wezterm.font("0xProto Nerd Font")
 
@@ -55,13 +55,6 @@ config.enable_scroll_bar = true
 config.scrollback_lines = 100000
 config.tab_bar_at_bottom = true
 config.freetype_load_flags = "NO_HINTING"
-
--- config.mux_env_remove = {
--- 	"SSH_AUTH_SOCK",
--- 	"SSH_CLIENT",
--- 	"SSH_CONNECTION",
--- 	"DISPLAY",
--- }
 
 config.enable_wayland = false
 
@@ -124,6 +117,23 @@ config.keys = {
 				end
 			end),
 		}),
+	},
+}
+
+config.unix_domains = {
+	{
+		name = "madhukar-pc-tailscale",
+		proxy_command = {
+			"ssh",
+			"-v",
+			"-J",
+			"madhukar@madhukar-pc.tailce84f.ts.net",
+			"madhukar@127.0.0.1",
+			"-Y",
+			"wezterm",
+			"cli",
+			"proxy",
+		},
 	},
 }
 
