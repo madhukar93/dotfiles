@@ -6,7 +6,13 @@ local smart_splits = wezterm.plugin.require("https://github.com/mrjones2014/smar
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
-config.default_prog = { "/opt/homebrew/bin/fish", "-l" }
+if string.match(wezterm.target_triple, "apple") then
+	-- macOS-specific settings
+	config.default_prog = { "/opt/homebrew/bin/fish", "-l" }
+else
+	-- Default settings for other platforms (e.g., Linux)
+	config.default_prog = { "/home/linuxbrew/.linuxbrew/bin/fish", "-l" }
+end
 
 config.font = wezterm.font("0xProto Nerd Font")
 
@@ -19,6 +25,8 @@ local function get_appearance()
 	-- end
 	-- return "Dark"
 end
+
+config.window_background_opacity = 0.75
 
 local custom_github_light = wezterm.color.get_builtin_schemes()["Github Light (Gogh)"]
 config.color_schemes = {
