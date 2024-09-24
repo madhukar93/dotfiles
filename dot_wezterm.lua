@@ -78,6 +78,8 @@ config.keys = {
 	{ key = "&", mods = "LEADER", action = act.CloseCurrentTab({ confirm = true }) },
 	{ key = "x", mods = "LEADER", action = act.CloseCurrentPane({ confirm = true }) },
 	{ key = "z", mods = "LEADER", action = act.TogglePaneZoomState },
+	{ key = "LeftArrow", mods = "LEADER", action = act.MoveTabRelative(-1) },
+	{ key = "RightArrow", mods = "LEADER", action = act.MoveTabRelative(1) },
 
 	-- Window navigation
 
@@ -90,6 +92,10 @@ config.keys = {
 	{ key = "s", mods = "LEADER", action = act.SplitVertical({ domain = "CurrentPaneDomain" }) },
 	{ key = "v", mods = "LEADER", action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
 	{ key = "o", mods = "LEADER", action = act.ActivatePaneDirection("Next") },
+	{ key = "}", mods = "LEADER", action = act.RotatePanes("Clockwise") },
+	{ key = "{", mods = "LEADER", action = act.RotatePanes("CounterClockwise") },
+	{ key = "q", mods = "LEADER", action = act.PaneSelect },
+	--
 	-- Copy mode (limited functionality compared to tmux)
 	{ key = "[", mods = "LEADER", action = act.ActivateCopyMode },
 	{ key = "]", mods = "LEADER", action = act.PasteFrom("Clipboard") },
