@@ -71,7 +71,7 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(you-should-use git tmux docker vi-mode z kubectl macos dotenv gcloud terraform aws zsh-completions direnv zsh-nvm)
+plugins=(you-should-use git tmux docker vi-mode z kubectl macos dotenv terraform aws zsh-completions direnv zsh-nvm)
 
 bindkey '^X' create_completion
 # User configuration
@@ -136,7 +136,6 @@ alias gu="ggpull --ff-only"
 alias tf=terraform
 alias kubens="kubectl config set-context --current --namespace"
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 export PATH="/usr/local/opt/openjdk@11/bin:$PATH"
 
 export PATH="/usr/local/opt/postgresql@11/bin:$PATH"
@@ -205,3 +204,7 @@ if [[ $(uname) == "darwin" ]]; then
   source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
   export USE_GKE_GCLOUD_AUTH_PLUGIN=True
 fi
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="$HOME/.sdkman"
+[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
