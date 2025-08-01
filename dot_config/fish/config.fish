@@ -4,137 +4,108 @@ function fish_user_key_bindings
     fish_default_key_bindings -M insert
 
     # Then execute the vi-bindings so they take precedence when there's a conflict.
-    # Without --no-erase fish_vi_key_bindings will default to
-    # resetting all bindings.
+    # Without --no-erase fish_vi_key_bindings will default to resetting all bindings.
     # The argument specifies the initial mode (insert, "default" or visual).
     fish_vi_key_bindings --no-erase insert
+    bind --mode insert . _puffer_fish_expand_dots
+    bind --mode insert ! _puffer_fish_expand_bang
+    bind --mode insert '$' _puffer_fish_expand_lastarg
     bind -M default \cf accept-autosuggestion
     bind -M insert \cf accept-autosuggestion
 end
 
-set -U EDITOR nvim
-
 fish_user_key_bindings
+
+eval "$(/opt/homebrew/bin/brew shellenv)"
 
 direnv hook fish | source
 set -gx EDITOR nvim
 
 set -gx fish_tmux_autoquit false
-
 set -gx GPG_TTY (tty)
 
-alias fdfind fd
 set -gx FZF_DEFAULT_COMMAND "fd -a . (pwd)"
+
+set -gx GEM_HOME "$HOME/.gem"
+set -gx GEM_PATH "$HOME/.gem"
 
 function tigf
     tig (fzf)
 end
 
-alias k kubectl
+abbr -a tf terraform
 
 # kubectl aliases
-abbr -a k kubectl
+alias k kubectl
 abbr -a kd 'k describe'
 abbr -a kg 'k get'
 abbr -a kaf 'k apply -f'
-abbr -a kdel 'k delete'
-abbr -a ke 'k edit'
-abbr -a kccc 'k config current-context'
-abbr -a kcdc 'k config delete-context'
-abbr -a kcsc 'k config set-context'
-abbr -a kcuc 'k config use-context'
-abbr -a kdd 'kd deployment'
-abbr -a kdeld 'kdel deployment'
-abbr -a kdeli 'kdel ingress'
-abbr -a kdelp 'kdel pods'
-abbr -a kdels 'kdel svc'
-abbr -a kdelsec 'kdel secret'
-abbr -a kdi 'kd ingress'
-abbr -a kdp 'kd pods'
-abbr -a kds 'kd svc'
-abbr -a kdsec 'kd secret'
-abbr -a ked 'ke deployment'
-abbr -a kei 'ke ingress'
-abbr -a kep 'ke pods'
-abbr -a kes 'ke svc'
-abbr -a keti 'k exec -ti'
-abbr -a kgd 'kg deployment'
-abbr -a kgi 'kg ingress'
-abbr -a kgp 'kg pods'
-abbr -a kgrs 'kg rs'
-abbr -a kgs 'kg svc'
-abbr -a kgsec 'kg secret'
-abbr -a kl 'k logs'
-abbr -a klf 'k logs -f'
-abbr -a krh 'k rollout history'
-abbr -a krsd 'k rollout status deployment'
-abbr -a kru 'k rollout undo'
-abbr -a ksd 'k scale deployment'
+abbr -a L --position anywhere --set-cursor "% | less"
 
-source (kubebuilder completion fish | psub)
+abbr -a ls lsd
+abbr -a l ls -l
+abbr -a la ls -a
+abbr -a ll 'ls -la'
+abbr -a lt 'ls --tree'
 
-# TODO: cleanup, move stuff like this to conf.d/macos.fish, conf.d/linux.fish
-switch (uname)
-    case Darwin
-        source "(brew --prefix)/share/google-cloud-sdk/path.fish.inc"
-        # or just check if xclip exists?
-        function pbpaste
-            xclip -selection clipboard -o
-        end
+# source (kubebuilder completion fish | psub)
+source "$(brew --prefix)/share/google-cloud-sdk/path.fish.inc"
 
-        function pbcopy
-            xclip -selection clipboard
-        end
+fish_add_path -g "$HOME/.local/bin"
 
-end
-
-# TODO: chezmoi init to automatically install brew and other packages
-
-if test -d /home/linuxbrew/.linuxbrew # Linux
-    set -gx HOMEBREW_PREFIX "/home/linuxbrew/.linuxbrew"
-    set -gx HOMEBREW_CELLAR "$HOMEBREW_PREFIX/Cellar"
-    set -gx HOMEBREW_REPOSITORY "$HOMEBREW_PREFIX/Homebrew"
-    source /home/linuxbrew/.linuxbrew/opt/asdf/libexec/asdf.fish
-else if test -d /opt/homebrew # MacOS
-    set -gx HOMEBREW_PREFIX /opt/homebrew
-    set -gx HOMEBREW_CELLAR "$HOMEBREW_PREFIX/Cellar"
-    set -gx HOMEBREW_REPOSITORY "$HOMEBREW_PREFIX/homebrew"
-end
-fish_add_path -gP "$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin"
-! set -q MANPATH; and set MANPATH ''
-set -gx MANPATH "$HOMEBREW_PREFIX/share/man" $MANPATH
-! set -q INFOPATH; and set INFOPATH ''
-set -gx INFOPATH "$HOMEBREW_PREFIX/share/info" $INFOPATH
-
-# used by a bunch of stuff pipx etc
-fish_add_path -g "$HOME/.local/bin/"
-
-set sponge_purge_only_on_exit true
-# 130 - sigint <ctr + c>
-set sponge_successful_exit_codes 0 127 130
-
-abbr -a tf terraform
-
-nvm use latest --silent
-
-source "$HOME/.cargo/env.fish"
-
-fish_add_path -g "$HOME/go/bin/"
-
-abbr -a mk 'microk8s kubectl'
-set -gx KUBECONFIG "$HOME/.kube/config:$HOME/.kube/microk8s"
-
-# Lando
-fish_add_path -g "$HOME/.lando/bin"
-fish_add_path -g "$HOME/.krew/bin"
-
-status --is-interactive; and . (pyenv init - | psub)
-
-# https://github.com/bitwarden/clients/issues/6689
 alias bw='NODE_OPTIONS="--no-deprecation" command bw'
+
+set -gx PYENV_ROOT $HOME/.pyenv
+set -gx PATH $PYENV_ROOT/bin $PATH
+status is-interactive; and pyenv init - | source
+status is-interactive; and pyenv virtualenv-init - | source
 
 starship init fish | source
 
-# https://github.com/wez/wezterm/issues/115#issuecomment-1902765788
-# FIXME: not working on the linux box
 source "$HOME/.config/fish/shell_integration.fish"
+
+alias nnn='command nnn -a'
+
+set -gx EGET_BIN '$HOME/.local/bin'
+
+set -gx NNN_PLUG 'z:autojump;P:preview-tui;f:fzplug;y:cbcopy-mac;p:cbpaste-mac;e:-!sudo -E vim "$nnn"*'
+set -gx NNN_FIFO "/tmp/nnn.fifo"
+set -gx NODE_OPTIONS --no-deprecation
+
+# Added by `rbenv init` on Wed Oct 23 23:13:22 IST 2024
+status --is-interactive; and rbenv init - --no-rehash fish | source
+
+fish_add_path -g "$HOME/.pub-cache/bin"
+alias tailscale /Applications/Tailscale.app/Contents/MacOS/Tailscale
+
+set k9s_skin_dir (k9s info | grep 'k9s/skins' | cut -d' ' -f2- | string trim)
+set k9s_current_theme $k9s_skin_dir/current.yaml
+
+if test "$ALACRITTY" = true
+    function theme
+        ln -sf $HOME/.config/alacritty/{$argv[1]}.toml $HOME/.config/alacritty/active.toml
+    end
+
+    function theme_k9s
+        ln -sf $k9s_skin_dir/{$argv[1]}.yaml $k9s_current_theme
+    end
+
+    set -l ALACRITTY_THEME (defaults read -g AppleInterfaceStyle 2>/dev/null; or echo "Light")
+
+    if test "$ALACRITTY_THEME" = Dark
+        theme catppuccin/catppuccin-mocha
+        theme_k9s solarized-dark
+
+    else
+        theme catppuccin/catppuccin-latte
+        theme_k9s solarized-light
+    end
+end
+
+# https://github.com/sharkdp/bat/issues/1746#issuecomment-1004698823
+set -gx BAT_THEME ansi
+set -gx KUBECTL_EXTERNAL_DIFF "dyff between --omit-header --set-exit-code"
+
+# Added by OrbStack: command-line tools and integration
+# This won't be added again if you remove it.
+source ~/.orbstack/shell/init2.fish 2>/dev/null || :
