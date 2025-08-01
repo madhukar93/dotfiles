@@ -48,7 +48,7 @@ end
 local appearance = get_appearance()
 config.color_scheme = scheme_for_appearance(appearance)
 
-local bar = wezterm.plugin.require("https://github.com/adriankarlen/bar.wezterm")
+local bar = wezterm.plugin.require("https://github.com/madhukar93/bar.wezterm")
 bar.apply_to_config(config, {
 	modules = {
 		spotify = {
