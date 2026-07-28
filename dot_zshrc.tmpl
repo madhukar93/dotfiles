@@ -117,12 +117,18 @@ compinit
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export EDITOR="nvim"
+{{ if .personal -}}
 export ANDROID_SDK_ROOT=$HOME/Library/Android/sdk
 export PATH=$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/platform-tools:$PATH
+{{ end -}}
 bindkey '^N' autosuggest-accept
 
 ZSH_THEME="robbyrussell"
 source $ZSH/oh-my-zsh.sh
+
+if command -v atuin >/dev/null 2>&1; then
+  eval "$(atuin init zsh)"
+fi
 
 # https://github.com/nvm-sh/nvm/issues/2724#issuecomment-1097815269
 export NVM_DIR="$HOME/.nvm"
@@ -130,15 +136,15 @@ export NVM_DIR="$HOME/.nvm"
 #[ -s "/usr/local/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/usr/local/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
 
 alias amend="git commit --all --amend --no-verify"
-alias elastic-hq="docker run -p 5000:5000 -e url=http://elasticsearch-search-prod.grofers.com:9200 elastichq/elasticsearch-hq"
 alias fixup="git commit --no-verify -am fixup"
 alias gu="ggpull --ff-only"
 alias tf=terraform
 alias kubens="kubectl config set-context --current --namespace"
 
-export PATH="/usr/local/opt/openjdk@11/bin:$PATH"
-
-export PATH="/usr/local/opt/postgresql@11/bin:$PATH"
+if command -v brew >/dev/null 2>&1; then
+  export PATH="$(brew --prefix)/opt/openjdk@11/bin:$PATH"
+  export PATH="$(brew --prefix)/opt/postgresql@11/bin:$PATH"
+fi
 
 export FZF_DEFAULT_COMMAND='rg --hidden --files'
 
@@ -155,9 +161,11 @@ alias gcleanb="git for-each-ref --format '%(refname:short)' refs/heads | grep -v
 alias cat="bat"
 if [ -e $HOME/.nix-profile/etc/profile.d/nix.sh ]; then . $HOME/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
 export PATH="$HOME/bin:$PATH"
-alias kapis="kubectl get apiservices --template='{{range $api := .items}}{{range $api.status.conditions}}{{if eq .type \"Available\"}}{{$api.metadata.name}} {{.status}}{{"\n"}}{{end}}{{end}}{{end}}'"
+alias kapis="kubectl get apiservices --template='{{"{{"}}range $api := .items{{"}}"}}{{"{{"}}range $api.status.conditions{{"}}"}}{{"{{"}}if eq .type \"Available\"{{"}}"}}{{"{{"}}$api.metadata.name{{"}}"}} {{"{{"}}.status{{"}}"}}{{"{{"}}"\n"{{"}}"}}{{"{{"}}end{{"}}"}}{{"{{"}}end{{"}}"}}{{"{{"}}end{{"}}"}}'"
 alias kctx="kubectl config use-context"
-export PATH="/usr/local/sbin:$PATH"
+if command -v brew >/dev/null 2>&1; then
+  export PATH="$(brew --prefix)/sbin:$PATH"
+fi
 export PATH="$PATH:$GOBIN"
 export KUBECTL_EXTERNAL_DIFF='dyff between --color=on --omit-header --set-exit-code'
 
@@ -194,16 +202,20 @@ alias python=python3
 # 	eval "$(phpenv init -)"
 # fi
 
-export LDFLAGS="-L/usr/local/opt/openssl@3/lib"
-export CPPFLAGS="-I/usr/local/opt/openssl@3/include"
+if command -v brew >/dev/null 2>&1; then
+  export LDFLAGS="-L$(brew --prefix)/opt/openssl@3/lib"
+  export CPPFLAGS="-I$(brew --prefix)/opt/openssl@3/include"
+fi
 #zprof
 export GPG_TTY=$(tty)
 source <(stern --completion=zsh)
 
-if [[ $(uname) == "darwin" ]]; then
-  source "/usr/local/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/path.zsh.inc"
+{{ if eq .chezmoi.os "darwin" -}}
+if command -v brew >/dev/null 2>&1; then
+  source "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
   export USE_GKE_GCLOUD_AUTH_PLUGIN=True
 fi
+{{ end -}}
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="$HOME/.sdkman"

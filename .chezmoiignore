@@ -1,0 +1,5 @@
+CLAUDE.md
+
+{{ if ne .chezmoi.os "darwin" -}}
+.config/karabiner
+{{ end -}}

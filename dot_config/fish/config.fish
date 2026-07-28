@@ -109,3 +109,16 @@ set -gx KUBECTL_EXTERNAL_DIFF "dyff between --omit-header --set-exit-code"
 # Added by OrbStack: command-line tools and integration
 # This won't be added again if you remove it.
 source ~/.orbstack/shell/init2.fish 2>/dev/null || :
+
+# Enable AWS CLI autocompletion
+complete --command aws --no-files --arguments '(begin; set --local --export COMP_SHELL fish; set --local --export COMP_LINE (commandline); aws_completer | sed \'s/ $//\'; end)'
+
+# If you need to have mysql-client first in your PATH, run:
+fish_add_path /opt/homebrew/opt/mysql-client/bin
+
+# For compilers to find mysql-client you may need to set:
+set -gx LDFLAGS -L/opt/homebrew/opt/mysql-client/lib
+set -gx CPPFLAGS -I/opt/homebrew/opt/mysql-client/include
+
+# For pkgconf to find mysql-client you may need to set:
+set -gx PKG_CONFIG_PATH /opt/homebrew/opt/mysql-client/lib/pkgconfig

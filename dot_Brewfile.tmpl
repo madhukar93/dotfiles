@@ -1,0 +1,67 @@
+# Managed by chezmoi (dot_Brewfile.tmpl -> ~/.Brewfile).
+# Curated to match what the rest of this dotfiles repo actually references —
+# not a full dump of any one machine's install history. Run via:
+#   brew bundle --file="$HOME/.Brewfile"
+# (the run_onchange_after_10-brew-bundle.sh.tmpl script does this automatically
+# on `chezmoi apply` whenever this file's rendered content changes).
+
+# -- shells / prompt ----------------------------------------------------------
+brew "fish"
+brew "starship"
+brew "direnv"
+
+# -- core CLI tools -------------------------------------------------------------
+brew "atuin" # cross-shell, cross-machine synced history — see run_once_after_40-atuin.sh.tmpl
+brew "fzf"
+brew "ripgrep"
+brew "fd"
+brew "bat"
+brew "lsd"
+brew "jq"
+brew "tig"
+brew "lazygit"
+brew "nnn"
+brew "mdcat"
+brew "eget"
+brew "gnupg"
+brew "bitwarden-cli"
+
+# -- editors / multiplexer ------------------------------------------------------
+brew "neovim"
+brew "tmux"
+
+# -- kubernetes / cloud / infra ---------------------------------------------------
+brew "kubernetes-cli" # provides kubectl
+brew "kustomize"
+brew "dyff"
+brew "stern"
+brew "krew"
+brew "argocd"
+brew "terraform"
+brew "awscli"
+brew "gh"
+
+# -- language version managers ---------------------------------------------------
+brew "pyenv"
+brew "pyenv-virtualenv"
+brew "rbenv"
+# sdkman and oh-my-zsh have no Homebrew formula; installed by
+# run_once_after_* scripts below instead.
+
+{{ if eq .chezmoi.os "darwin" -}}
+# -- macOS-only (casks) -----------------------------------------------------------
+cask "wezterm@nightly" # matches the channel currently in use; swap for "wezterm" for stable
+cask "google-cloud-sdk"
+cask "karabiner-elements"
+cask "tailscale"
+cask "zed@preview" # matches the channel currently in use; swap for "zed" for stable
+cask "orbstack"
+cask "font-0xproto-nerd-font" # the one nerd font dot_wezterm.lua actually references
+{{ else -}}
+# -- Linux notes ------------------------------------------------------------------
+# No Homebrew cask equivalents for: wezterm (build/install separately), Karabiner
+# (macOS-only, not applicable), google-cloud-sdk (use the official apt/install
+# script), tailscale (use your distro's package or the official install script).
+# Nerd fonts: install font-0xproto-nerd-font manually or via your distro's font
+# packages, since Homebrew casks aren't available on Linux.
+{{ end -}}

@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+
+# This comment's hash changes whenever dot_Brewfile.tmpl's rendered content
+# changes, which is what makes chezmoi re-run this script on `apply`.
+# Brewfile hash: {{ include "dot_Brewfile.tmpl" | sha256sum }}
+
+if command -v brew >/dev/null 2>&1; then
+  echo "Running brew bundle..."
+  brew bundle --file="$HOME/.Brewfile"
+else
+  echo "Homebrew not found on PATH, skipping brew bundle." >&2
+fi

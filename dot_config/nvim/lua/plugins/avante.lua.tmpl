@@ -4,6 +4,7 @@ return {
   lazy = false,
   version = false, -- set this if you want to always pull the latest change
   opts = {
+{{ if .personal -}}
     provider = "ollama",
     vendors = {
       ---@type AvanteProvider
@@ -31,6 +32,11 @@ return {
         end,
       },
     },
+{{ else -}}
+    -- no personal AI infra on a work machine by default; adjust to whatever's
+    -- actually sanctioned for use with company code once you know.
+    provider = "copilot",
+{{ end -}}
   },
   -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
   build = "make",

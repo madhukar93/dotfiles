@@ -1,0 +1,9 @@
+{{ $personal := promptBoolOnce . "personal" "Is this your personal machine" -}}
+[data]
+personal = {{ $personal }}
+work = {{ not $personal }}
+{{ if not $personal -}}
+workProjectPath = {{ promptStringOnce . "workProjectPath" "Work project root path on the remote host (e.g. /home/user/work/project)" | quote }}
+workBedrockProfile = {{ promptStringOnce . "workBedrockProfile" "AWS Bedrock named profile for work" | quote }}
+workBedrockRegion = {{ promptStringOnce . "workBedrockRegion" "AWS Bedrock region for work" | quote }}
+{{ end -}}
