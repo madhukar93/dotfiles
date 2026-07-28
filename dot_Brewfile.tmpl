@@ -5,6 +5,13 @@
 # (the run_onchange_after_10-brew-bundle.sh.tmpl script does this automatically
 # on `chezmoi apply` whenever this file's rendered content changes).
 
+# -- chezmoi itself -------------------------------------------------------------
+# Keeps chezmoi on a native-arch, brew-managed build. A stale x86_64-only
+# chezmoi binary elsewhere on PATH will cause every child process it spawns
+# (e.g. this Brewfile's own bootstrap script) to inherit Rosetta translation,
+# which then makes `brew install`/`upgrade` refuse to run.
+brew "chezmoi"
+
 # -- shells / prompt ----------------------------------------------------------
 brew "fish"
 brew "starship"
@@ -50,11 +57,9 @@ brew "rbenv"
 
 {{ if eq .chezmoi.os "darwin" -}}
 # -- macOS-only (casks) -----------------------------------------------------------
-cask "wezterm@nightly" # matches the channel currently in use; swap for "wezterm" for stable
-cask "google-cloud-sdk"
+cask "gcloud-cli" # renamed from google-cloud-sdk
 cask "karabiner-elements"
-cask "tailscale"
-cask "zed@preview" # matches the channel currently in use; swap for "zed" for stable
+cask "tailscale-app" # renamed from tailscale
 cask "orbstack"
 cask "font-0xproto-nerd-font" # the one nerd font dot_wezterm.lua actually references
 {{ else -}}

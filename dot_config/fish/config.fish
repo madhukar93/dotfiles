@@ -16,13 +16,7 @@ end
 
 fish_user_key_bindings
 
-if test -x /opt/homebrew/bin/brew
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-else if test -x /usr/local/bin/brew
-    eval "$(/usr/local/bin/brew shellenv)"
-else if test -x /home/linuxbrew/.linuxbrew/bin/brew
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-end
+eval "$(/opt/homebrew/bin/brew shellenv)"
 
 direnv hook fish | source
 set -gx EDITOR nvim
@@ -82,14 +76,12 @@ set -gx NODE_OPTIONS --no-deprecation
 status --is-interactive; and rbenv init - --no-rehash fish | source
 
 fish_add_path -g "$HOME/.pub-cache/bin"
-if test -x /Applications/Tailscale.app/Contents/MacOS/Tailscale
-    alias tailscale /Applications/Tailscale.app/Contents/MacOS/Tailscale
-end
+alias tailscale /Applications/Tailscale.app/Contents/MacOS/Tailscale
 
 set k9s_skin_dir (k9s info | grep 'k9s/skins' | cut -d' ' -f2- | string trim)
 set k9s_current_theme $k9s_skin_dir/current.yaml
 
-if test "$ALACRITTY" = true; and test (uname) = Darwin
+if test "$ALACRITTY" = true
     function theme
         ln -sf $HOME/.config/alacritty/{$argv[1]}.toml $HOME/.config/alacritty/active.toml
     end
@@ -121,17 +113,15 @@ source ~/.orbstack/shell/init2.fish 2>/dev/null || :
 # Enable AWS CLI autocompletion
 complete --command aws --no-files --arguments '(begin; set --local --export COMP_SHELL fish; set --local --export COMP_LINE (commandline); aws_completer | sed \'s/ $//\'; end)'
 
-if command -v brew >/dev/null 2>&1
-    # If you need to have mysql-client first in your PATH:
-    fish_add_path (brew --prefix)/opt/mysql-client/bin
+# If you need to have mysql-client first in your PATH, run:
+fish_add_path /opt/homebrew/opt/mysql-client/bin
 
-    # For compilers to find mysql-client:
-    set -gx LDFLAGS -L(brew --prefix)/opt/mysql-client/lib
-    set -gx CPPFLAGS -I(brew --prefix)/opt/mysql-client/include
+# For compilers to find mysql-client you may need to set:
+set -gx LDFLAGS -L/opt/homebrew/opt/mysql-client/lib
+set -gx CPPFLAGS -I/opt/homebrew/opt/mysql-client/include
 
-    # For pkgconf to find mysql-client:
-    set -gx PKG_CONFIG_PATH (brew --prefix)/opt/mysql-client/lib/pkgconfig
-end
+# For pkgconf to find mysql-client you may need to set:
+set -gx PKG_CONFIG_PATH /opt/homebrew/opt/mysql-client/lib/pkgconfig
 
 if status is-interactive
     # Add this line to initialize Atuin
