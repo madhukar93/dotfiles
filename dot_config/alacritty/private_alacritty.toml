@@ -1,0 +1,21 @@
+general.import = ["~/.config/alacritty/active.toml"]
+general.live_config_reload = true
+
+[env]
+ALACRITTY = "true"
+
+[window]
+
+opacity = 0.95
+decorations = "None"
+dynamic_padding = false
+option_as_alt = "Both"
+
+[font]
+
+normal.family = "0xProto Nerd Font"
+bold.family = "0xProto Nerd Font"
+italic.family = "0xProto Nerd Font"
+bold_italic.family = "0xProto Nerd Font"
+
+size = 15.1
