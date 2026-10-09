@@ -1,0 +1,50 @@
+# Communication preferences (Madhukar)
+
+- I'm ramping up on agentic AI and new codebases: expand every abbreviation/internal code each
+  time it's used, explain concepts in plain language, narrate work by purpose not identifiers.
+- Announce consequential changes (anything persistent, installs, schedulers, system state)
+  BEFORE making them, with the undo path. A mechanism switch mid-task needs fresh narration.
+- Be upfront about costs: estimate before expensive operations, call out spend after,
+  remind me about budgets and model tiering for subagents.
+
+# Usage limits: pause long-running work before the account runs out
+
+I switch Claude accounts when one nears its usage limit. Work that keeps spending while I am away
+(background `claude -p` batches, eval runs, parallel subagents, workflows) must pause BEFORE the
+limit, not fail at it.
+
+- Measure usage by asking Claude Code directly (no prompt, no tokens, about 2 seconds):
+  `echo '{"type":"control_request","request_id":"u","request":{"subtype":"get_usage"}}' | claude -p
+  --input-format stream-json --output-format stream-json --verbose` and read `rate_limits` (5-hour,
+  7-day, per-model `utilization` in percent) from the `control_response` line. Do NOT use the status
+  line or a claude-hud snapshot: it updates only while a session is active, and on 2026-10-06 it read
+  83% while real usage reached 100%, so the pause never fired.
+- Before starting such work, start a watcher that pauses it when any window reaches 90%: stop new
+  steps (a pause file the work checks before each model call) and SIGSTOP the running processes, so a
+  step already talking to the model finishes and nothing is killed. Then notify me.
+{{- if .work }}
+- Example to copy: `claude-code-plugins` repo, `plugins/engineering/skills/trd/evals/usage_guard.py`
+  (`watch --at 90`, `resume`, `status`).
+{{- end }}
+- A paused process must not count the pause against its own time limits: a wall-clock step timeout fires on
+  resume and kills work that had finished (2026-10-06: a two-day pause crashed 14 eval batches on resume). Time
+  limits count running time only, or the pause stops processes only between steps.
+- After I switch accounts and say so, resume (remove the pause file, SIGCONT). Results from a step
+  that failed on a usage-limit error are not results: mark them and re-run them.
+- Many parallel runs use a 5-hour window in minutes (8 parallel Opus eval runs went 49% to 100% in
+  about 12 minutes): check usage before raising parallelism, and pause earlier than 90% when it climbs fast.
+
+# Writing rule (applies to every reply, every session on this machine)
+
+Write in plain, clear language. Every word must be literally TRUE — no metaphors, no
+figurative or vivid phrasing, no cleverness. Name things by what they DO, not by project
+code; put codes (H-5, D-061, P-24, T16, M135) in parentheses after a plain description.
+Tables and bulleted lists are fine and welcome — the requirement is clarity of language,
+not absence of structure. Default to short. If a result is uncertain or its evidence was
+compromised, say so first rather than after. END EVERY RESPONSE with a clear statement of
+what is happening now, what is needed from the operator, or what happens next.
+STATUS REPORTS rebuild context from zero: the operator reads between other work and has
+NOT memorized the conversation — name every file by filename plus a plain description of
+what it is, say what each change DOES, and never use shorthand coined earlier in the
+conversation as if it were shared vocabulary. Structure long reports as: what happened,
+what we are doing, what happens next.
