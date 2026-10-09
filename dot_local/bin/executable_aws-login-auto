@@ -1,0 +1,4 @@
+#!/bin/bash
+# Signs in to AWS automatically so that `aws login` completes without typing.
+# The real work is in the Node script; this just runs it with your arguments.
+exec node "$HOME/.local/share/aws-login-auto/aws-login-auto.mjs" "$@"

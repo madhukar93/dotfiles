@@ -1,0 +1,27 @@
+#!/bin/sh
+set -eu
+
+# This comment's hash changes whenever the dependency list changes, which is what
+# makes chezmoi re-run this script on `apply`.
+# package.json hash: {{ include "dot_local/share/aws-login-auto/package.json" | sha256sum }}
+
+dir="$HOME/.local/share/aws-login-auto"
+
+if [ ! -f "$dir/package.json" ]; then
+  exit 0
+fi
+
+if ! command -v npm >/dev/null 2>&1; then
+  echo "npm not found on PATH, skipping aws-login-auto dependency install." >&2
+  echo "Install Node, then run: npm install --prefix $dir" >&2
+  exit 0
+fi
+
+echo "Installing aws-login-auto dependencies..."
+# playwright-core drives the Google Chrome already on the machine, so no browser
+# download is wanted here.
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --prefix "$dir" --no-audit --no-fund
+
+if [ ! -d "/Applications/Google Chrome.app" ]; then
+  echo "Google Chrome is not installed; 'aws-login-auto' needs it to sign in." >&2
+fi

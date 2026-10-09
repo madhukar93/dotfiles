@@ -1,0 +1,112 @@
+#!/bin/bash
+# Runs the real `aws login`, but with the AWS sign-in page's account number and
+# IAM user name already filled in.
+#
+# Both values are taken from the profile's login_session setting in
+# ~/.aws/config, which looks like:
+#     login_session = arn:aws:iam::111122223333:user/your.name
+# Splitting that on colons, the fifth field is the account number and the sixth
+# is the resource, "user/your.name". The user name is the last
+# slash-separated part of the resource.
+#
+# Every argument is passed through to `aws login` untouched, so
+# `aws-login --profile staging` behaves exactly like `aws login --profile
+# staging` apart from the pre-filled fields.
+
+set -uo pipefail
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+helper="$script_dir/aws-login-browser"
+
+# Work out which profile is in play: an explicit --profile wins, then the
+# AWS_PROFILE environment variable, then the profile named "default".
+profile="${AWS_PROFILE:-default}"
+args=("$@")
+count=${#args[@]}
+for ((i = 0; i < count; i++)); do
+    case "${args[i]}" in
+        --profile)
+            next=$((i + 1))
+            if ((next < count)); then
+                profile="${args[next]}"
+            fi
+            ;;
+        --profile=*)
+            profile="${args[i]#--profile=}"
+            ;;
+    esac
+done
+
+# Refuse the profile named "default". With no default profile on this machine, a
+# bare `aws` command fails safely instead of quietly acting on some account. If
+# this tool ever created one, every later bare command would silently work
+# against it. Set AWS_LOGIN_ALLOW_DEFAULT=1 to override deliberately.
+if [[ "$profile" == "default" && "${AWS_LOGIN_ALLOW_DEFAULT:-}" != "1" ]]; then
+    echo "aws-login: refusing to log in to the profile named 'default'." >&2
+    echo "           Name the account you mean, for example:" >&2
+    echo "               aws-login --profile staging" >&2
+    echo "           Creating a default profile would make every bare 'aws' command" >&2
+    echo "           silently use it. Set AWS_LOGIN_ALLOW_DEFAULT=1 to override." >&2
+    exit 2
+fi
+
+account="${AWS_LOGIN_ACCOUNT_ID:-}"
+user_name="${AWS_LOGIN_USER_NAME:-}"
+
+if [[ -z "$account" || -z "$user_name" ]]; then
+    login_session="$(aws configure get login_session --profile "$profile" 2>/dev/null || true)"
+
+    if [[ -z "$account" ]]; then
+        account="$(printf '%s' "$login_session" | awk -F: '{print $5}')"
+    fi
+
+    if [[ -z "$user_name" ]]; then
+        resource="$(printf '%s' "$login_session" | awk -F: '{print $6}')"
+        # Only an IAM user has a name that the sign-in page can pre-fill; a role
+        # or any other kind of identity is left alone.
+        if [[ "$resource" == user/* ]]; then
+            user_name="${resource##*/}"
+        fi
+    fi
+fi
+
+if [[ -n "$account" && -x "$helper" ]]; then
+    export AWS_LOGIN_ACCOUNT_ID="$account"
+    if [[ -n "$user_name" ]]; then
+        export AWS_LOGIN_USER_NAME="$user_name"
+    fi
+    # Python's browser-opening code reads BROWSER, and that is what the AWS
+    # CLI uses to launch the sign-in page.
+    export BROWSER="$helper"
+else
+    echo "aws-login: no account number recorded for profile '$profile', so the" >&2
+    echo "           sign-in page will open without the account filled in." >&2
+    echo "           Sign in once with 'aws login --profile $profile' and this" >&2
+    echo "           command will pre-fill it from then on." >&2
+fi
+
+aws login "$@"
+login_status=$?
+
+if [[ $login_status -ne 0 ]]; then
+    exit $login_status
+fi
+
+# Prove the login worked rather than assuming it did because `aws login` exited
+# cleanly. Asking AWS is the only answer that means anything.
+identity=$(aws sts get-caller-identity --profile "$profile" --output text --query Account 2>&1)
+if [[ $? -ne 0 ]]; then
+    echo "aws-login: the login finished, but profile '$profile' still has no" >&2
+    echo "           usable credentials:" >&2
+    echo "           $identity" >&2
+    exit 1
+fi
+
+# Landing in the wrong account is worse than landing in none.
+if [[ -n "$account" && "$identity" != "$account" ]]; then
+    echo "aws-login: signed in to account $identity, but profile '$profile' was" >&2
+    echo "           meant to be account $account. Check which account you signed in as." >&2
+    exit 1
+fi
+
+echo "aws-login: verified: profile '$profile' is account $identity"
