@@ -14,9 +14,15 @@ chezmoi maps source paths to target paths via prefix stripping, e.g.:
 - `dot_config/nvim/init.lua` → `~/.config/nvim/init.lua`
 - `dot_config/private_karabiner/private_karabiner.json` → `~/.config/karabiner/karabiner.json` (`private_` marks a directory chezmoi creates with restricted permissions)
 
-There is no build, lint, or test tooling in this repo — it's pure configuration. There are no chezmoi templates
-(`.tmpl` files), no `.chezmoiroot`, and no scripts under `.chezmoiscripts`, so files map 1:1 from source to
-target without templating logic to reason about.
+There is no build, lint, or test tooling in this repo — it's pure configuration. There is no `.chezmoiroot` and
+no `.chezmoiscripts` directory, so most files map 1:1 from source to target. A few files *are* templates
+(`.tmpl`): `dot_Brewfile.tmpl`, `dot_zshrc.tmpl`, and the `run_once_*` / `run_onchange_*` scripts, which use
+`{{ include ... | sha256sum }}` so chezmoi re-runs them when their input changes.
+
+**This repository is public on GitHub (`madhukar93/dotfiles`), and it belongs to a work laptop.** Never commit
+real AWS account numbers, IAM user names, internal hostnames, customer names, or anything else identifying the
+employer. Use the AWS documentation placeholders (`111122223333`, `your.name`) in examples instead. Secrets
+belong in the macOS Keychain and are read at runtime, never stored here.
 
 ## Common chezmoi commands
 
@@ -78,6 +84,26 @@ committed.
 - **`dot_config/pgcli/config`** — pgcli (Postgres CLI) config.
 - **`dot_config/private_karabiner/private_karabiner.json`** — Karabiner-Elements keyboard remapping (notably
   caps_lock ↔ control/escape dual-role).
+- **`dot_local/bin/aws-login*`, `dot_local/share/aws-login-auto/`** — signing in to AWS without typing. The
+  AWS CLI's `aws login` opens a browser sign-in page with empty fields; these rewrite the link so the account
+  number and IAM user name arrive filled in, and `aws-login-auto` goes further and completes the sign-in in a
+  hidden, throwaway copy of Google Chrome, taking the password from the macOS Keychain. `aws-login` is the
+  no-automation fallback and depends on nothing but the AWS CLI. Full explanation, including how to repair it
+  when AWS changes the sign-in page, is in `dot_local/share/aws-login-auto/README.md`.
+- **`run_onchange_after_40-install-aws-login-auto.sh.tmpl`** — installs the one dependency
+  (`playwright-core`, which drives the already-installed Chrome rather than downloading a browser). Neither
+  Chrome nor Node is in the Brewfile, deliberately: Node is managed by nvm here, so provisioning it through
+  Homebrew would conflict.
+- **`dot_config/fish/functions/aws*.fish`, `dot_config/fish/functions/__aws_profile_risk.fish`,
+  `dot_config/fish/conf.d/aws_profile_workspace_colour.fish`** — making the selected AWS account visible so
+  commands do not land on the wrong one. There is deliberately no profile named `default` on this machine, so
+  a bare `aws` command fails rather than acting on some arbitrary account. The right prompt shows the selected
+  profile coloured by risk, `awsp` picks one, `awswho` says which account it really resolves to, and the
+  `conf.d` handler tints the cmux workspace to match. Note these live alongside fisher-installed functions in
+  the same directory; the directory is intentionally **not** `exact_`, so chezmoi leaves fisher's files alone.
+- **`dot_claude/skills/aws-login/SKILL.md`** — a Claude Code skill so agents re-authenticate to AWS on their
+  own rather than stalling on an expired token. It is the only thing under `~/.claude` that this repo manages;
+  the rest of that directory is work-specific and stays out.
 
 ## Working in this repo
 

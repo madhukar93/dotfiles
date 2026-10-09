@@ -158,6 +158,24 @@ function resolveIdentity(opts) {
   return { account, user, region };
 }
 
+/**
+ * True if the profile's existing session still works. Asking AWS for identity
+ * is what exercises the CLI's own silent refresh (it swaps in a new token
+ * behind the scenes if the old one is low on time, using the profile's stored
+ * refresh token) - so a true result here means the browser and the Keychain
+ * password are not needed at all. It only comes back false when there is no
+ * session yet, or the refresh token itself has lapsed or been revoked.
+ */
+function hasLiveSession(profile, account) {
+  if (!awsConfigGet('login_session', profile)) return false;
+  const identity = spawnSync(
+    'aws',
+    ['sts', 'get-caller-identity', '--profile', profile, '--output', 'text', '--query', 'Account'],
+    { encoding: 'utf8' }
+  );
+  return identity.status === 0 && (identity.stdout || '').trim() === account;
+}
+
 // ------------------------------------------------------------------ password
 
 function keychainKey(account, user) {
@@ -713,6 +731,15 @@ async function main() {
     const key = keychainKey(account, user);
     if (forgetPassword(key)) note(`removed the stored password for ${key}.`);
     else note(`no stored password found for ${key}.`);
+    return 0;
+  }
+
+  // Try the existing session before touching the browser or the Keychain.
+  // This is what `aws login`'s own automatic refresh is for; a real sign-in
+  // should only happen when that refresh can't - no session yet, or the
+  // refresh token itself has expired or been revoked.
+  if (!opts.dryRun && hasLiveSession(opts.profile, account)) {
+    note(`profile ${opts.profile} already has a working session for account ${account}; refreshed without a browser.`);
     return 0;
   }
 
