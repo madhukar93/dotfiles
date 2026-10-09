@@ -7,9 +7,9 @@ function fish_user_key_bindings
     # Without --no-erase fish_vi_key_bindings will default to resetting all bindings.
     # The argument specifies the initial mode (insert, "default" or visual).
     fish_vi_key_bindings --no-erase insert
-    bind --mode insert . _puffer_fish_expand_dots
-    bind --mode insert ! _puffer_fish_expand_bang
-    bind --mode insert '$' _puffer_fish_expand_lastarg
+    #     bind --mode insert . _puffer_fish_expand_dot
+    #     bind --mode insert ! _puffer_fish_expand_bang
+    #     bind --mode insert '$' _puffer_fish_expand_lastarg
     bind -M default \cf accept-autosuggestion
     bind -M insert \cf accept-autosuggestion
 end
@@ -55,12 +55,13 @@ fish_add_path -g "$HOME/.local/bin"
 
 alias bw='NODE_OPTIONS="--no-deprecation" command bw'
 
-set -gx PYENV_ROOT $HOME/.pyenv
-set -gx PATH $PYENV_ROOT/bin $PATH
-status is-interactive; and pyenv init - | source
-status is-interactive; and pyenv virtualenv-init - | source
+# Replaced by mise
+# set -gx PYENV_ROOT $HOME/.pyenv
+# set -gx PATH $PYENV_ROOT/bin $PATH
+# status is-interactive; and pyenv init - | source
+# status is-interactive; and pyenv virtualenv-init - | source
 
-starship init fish | source
+# starship init fish | source
 
 source "$HOME/.config/fish/shell_integration.fish"
 
@@ -73,32 +74,25 @@ set -gx NNN_FIFO "/tmp/nnn.fifo"
 set -gx NODE_OPTIONS --no-deprecation
 
 # Added by `rbenv init` on Wed Oct 23 23:13:22 IST 2024
-status --is-interactive; and rbenv init - --no-rehash fish | source
+# Replaced by mise
+# status --is-interactive; and rbenv init - --no-rehash fish | source
 
 fish_add_path -g "$HOME/.pub-cache/bin"
 alias tailscale /Applications/Tailscale.app/Contents/MacOS/Tailscale
 
-set k9s_skin_dir (k9s info | grep 'k9s/skins' | cut -d' ' -f2- | string trim)
-set k9s_current_theme $k9s_skin_dir/current.yaml
+# Light/dark theme for the programs running inside the terminal.
+# The terminal itself already follows the system appearance via
+# ~/.config/ghostty/config. theme-sync points glow, fzf, lsd, k9s and atuin
+# at colours suited to the current background. See `functions/theme-sync.fish`.
+theme-sync
 
-if test "$ALACRITTY" = true
-    function theme
-        ln -sf $HOME/.config/alacritty/{$argv[1]}.toml $HOME/.config/alacritty/active.toml
-    end
-
-    function theme_k9s
-        ln -sf $k9s_skin_dir/{$argv[1]}.yaml $k9s_current_theme
-    end
-
-    set -l ALACRITTY_THEME (defaults read -g AppleInterfaceStyle 2>/dev/null; or echo "Light")
-
-    if test "$ALACRITTY_THEME" = Dark
-        theme catppuccin/catppuccin-mocha
-        theme_k9s solarized-dark
-
-    else
-        theme catppuccin/catppuccin-latte
-        theme_k9s solarized-light
+# Re-check before each command, so a shell opened this morning is still correct
+# after the system flips to dark this evening. `path mtime` is a fish builtin,
+# so this costs a stat and no subprocess.
+function __theme_check --on-event fish_preexec --description 'Resync the theme if the system appearance changed'
+    set -l m (path mtime $HOME/Library/Preferences/.GlobalPreferences.plist 2>/dev/null)
+    if test "$m" != "$__theme_prefs_mtime"
+        theme-sync
     end
 end
 
@@ -126,4 +120,24 @@ set -gx PKG_CONFIG_PATH /opt/homebrew/opt/mysql-client/lib/pkgconfig
 if status is-interactive
     # Add this line to initialize Atuin
     atuin init fish | source
+    mise activate fish | source
 end
+
+function claude-personal
+    env \
+        CLAUDE_CONFIG_DIR="$HOME/.claude-personal" \
+        claude $argv
+end
+
+set -gx CLAUDE_CODE_WORKFLOWS 1
+
+function cdwt --description 'Fuzzy search and cd into a git worktree'
+    set -l target (git worktree list | fzf | string split -m 1 ' ')[1]
+    if test -n "$target"
+        cd $target
+    end
+end
+
+# >>> grok installer >>>
+fish_add_path $HOME/.grok/bin
+# <<< grok installer <<<

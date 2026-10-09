@@ -1,0 +1,106 @@
+#!/usr/bin/env python3
+"""Opens the AWS sign-in URL that `aws login` hands to the browser, but first
+rewrites it so the sign-in page arrives with the AWS account number and the IAM
+user name already filled in.
+
+`aws login` prints a link to the AWS sign-in service's /v1/authorize address.
+That address sends the browser to a session-picker page, and neither the account
+number nor the user name can be passed through it. The IAM-user sign-in page one
+step further along accepts both: an "account" value and a "login_hint" value.
+This script skips the picker and goes straight to that page, carrying both.
+
+The values come from two environment variables, which the companion `aws-login`
+script sets:
+    AWS_LOGIN_ACCOUNT_ID   the 12-digit AWS account number (required)
+    AWS_LOGIN_USER_NAME    the IAM user name (optional)
+
+With AWS_LOGIN_ACCOUNT_ID unset, or for any link this script does not recognise,
+the link is opened unchanged.
+"""
+
+import os
+import subprocess
+import sys
+from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
+
+SIGNIN_HOST_SUFFIX = "signin.aws.amazon.com"
+AUTHORIZE_PATH = "/v1/authorize"
+IAM_SIGNIN_PATH = "/oauth"
+
+
+def rewrite(url):
+    """Returns (link, description of what was filled in). The link is the
+    IAM-user sign-in page with the account number and user name attached, or the
+    original link untouched if this is not a link we know how to rewrite."""
+    account = os.environ.get("AWS_LOGIN_ACCOUNT_ID", "").strip()
+    user_name = os.environ.get("AWS_LOGIN_USER_NAME", "").strip()
+    if not account:
+        return url, None
+
+    parts = urlsplit(url)
+    if parts.scheme != "https":
+        return url, None
+    if parts.netloc != SIGNIN_HOST_SUFFIX and not parts.netloc.endswith(
+        "." + SIGNIN_HOST_SUFFIX
+    ):
+        return url, None
+    if parts.path != AUTHORIZE_PATH:
+        return url, None
+
+    query = parse_qs(parts.query)
+
+    def first(name):
+        values = query.get(name) or []
+        return values[0] if values else None
+
+    client_id = first("client_id")
+    state = first("state")
+    code_challenge = first("code_challenge")
+    redirect_uri = first("redirect_uri")
+
+    # Without every one of these the sign-in round trip cannot complete, so
+    # fall back to the untouched link rather than sending a broken one.
+    if not (client_id and state and code_challenge and redirect_uri):
+        return url, None
+
+    new_query = {
+        "redirect_uri": redirect_uri,
+        "client_id": client_id,
+        "response_type": "code",
+        "iam_user": "true",
+        "backwards_compatible": "true",
+        "scope": first("scope") or "openid",
+        "state": state,
+        "code_challenge": code_challenge,
+        "code_challenge_method": first("code_challenge_method") or "SHA-256",
+        "account": account,
+    }
+    filled = f"account {account}"
+    if user_name:
+        new_query["login_hint"] = user_name
+        filled += f" and user name {user_name}"
+
+    rewritten = urlunsplit(
+        (parts.scheme, parts.netloc, IAM_SIGNIN_PATH, urlencode(new_query), "")
+    )
+    return rewritten, filled
+
+
+def main(argv):
+    if len(argv) < 2:
+        print("usage: aws-login-browser <url>", file=sys.stderr)
+        return 2
+
+    url, filled = rewrite(argv[1])
+    if filled:
+        print(
+            f"aws-login: opening the sign-in page with {filled} already filled in.",
+            file=sys.stderr,
+        )
+
+    opener = os.environ.get("AWS_LOGIN_BROWSER_OPENER", "/usr/bin/open")
+    return subprocess.call([opener, url])
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

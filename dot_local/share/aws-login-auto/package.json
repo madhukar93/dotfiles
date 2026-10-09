@@ -1,0 +1,10 @@
+{
+  "name": "aws-login-auto",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Signs in to AWS automatically for `aws login`, driving the installed Google Chrome in a throwaway profile.",
+  "dependencies": {
+    "playwright-core": "^1.49.0"
+  }
+}

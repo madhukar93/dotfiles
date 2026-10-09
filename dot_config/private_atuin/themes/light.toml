@@ -1,0 +1,13 @@
+# atuin colours for a light background: dark text so it stays readable.
+[theme]
+name = "light"
+parent = "default"
+
+[colors]
+AlertInfo = "darkgreen"
+AlertWarn = "darkgoldenrod"
+AlertError = "darkred"
+Annotation = "dimgray"
+Base = "black"
+Guidance = "darkslategray"
+Important = "darkmagenta"

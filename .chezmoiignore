@@ -4,3 +4,15 @@ README.md
 {{ if ne .chezmoi.os "darwin" -}}
 .config/karabiner
 {{ end -}}
+
+# Claude Code skills: share only the skills listed with "!". Everything else in
+# ~/.claude/skills (third-party installs, work skills, downloaded caches) stays local.
+.claude/skills/*
+!.claude/skills/aws-login
+
+# Links and blocks that fish's theme-sync rewrites when the system switches
+# between light and dark mode. chezmoi ships the light and dark files; theme-sync
+# picks one on the first shell start.
+.config/alacritty/active.toml
+.config/lsd/colors.yaml
+Library/Application Support/k9s/skins/current.yaml

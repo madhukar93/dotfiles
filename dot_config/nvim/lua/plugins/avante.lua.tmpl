@@ -1,5 +1,12 @@
 return {
   "yetone/avante.nvim",
+{{- if not .personal }}
+  -- Disabled on the work machine until a company-sanctioned AI provider is
+  -- known. The copilot provider crashes at startup without a Copilot OAuth
+  -- token (`:Copilot auth`). To re-enable: remove this line, pick a sanctioned
+  -- provider below, and authenticate it.
+  enabled = false,
+{{- end }}
   event = "VeryLazy",
   lazy = false,
   version = false, -- set this if you want to always pull the latest change
