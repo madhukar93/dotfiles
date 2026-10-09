@@ -1,0 +1,79 @@
+# Terminal appearance for cmux (embedded Ghostty).
+# Mirrors ~/.config/alacritty/alacritty.toml.
+
+font-family = "0xProto Nerd Font"
+font-size = 15.1
+
+theme = light:Catppuccin Latte,dark:Catppuccin Mocha
+
+background-opacity = 0.95
+window-padding-x = 0
+window-padding-y = 0
+macos-option-as-alt = true
+
+# No dimming of unfocused panes — focus is shown by the cursor being filled
+# in the focused pane and hollow in unfocused ones.
+unfocused-split-opacity = 1
+
+# =============================================================================
+# tmux-style Ctrl-B key sequences (added 2026-08-17)
+#
+# These live in Ghostty's keybinding system, which is SEPARATE from cmux's own
+# shortcuts in ~/.config/cmux/cmux.json. That is deliberate: cmux allows only
+# one shortcut per command, so putting these here leaves every cmux Command-key
+# shortcut (Cmd+D, Cmd+Shift+D, Cmd+T, Cmd+W, ...) working as it always did.
+# Both layers are active at once.
+#
+# Press Ctrl-B, release, then press the second key. Keys match the tmux
+# bindings in ~/.tmux/ ("Oh my tmux!").
+#
+# Undo: delete this whole block, then run `cmux reload-config`.
+#       Or restore the file: cp ~/.config/ghostty/config.bak ~/.config/ghostty/config
+# =============================================================================
+
+# Send a real Ctrl-B through to the program in the terminal, for Neovim page-up
+# and for a tmux session running over SSH. Same idea as tmux's `send-prefix`.
+keybind = ctrl+b>ctrl+b=text:\x02
+
+# --- panes and splits ---
+keybind = ctrl+b>minus=new_split:down
+keybind = ctrl+b>shift+minus=new_split:right
+keybind = ctrl+b>h=goto_split:left
+keybind = ctrl+b>j=goto_split:down
+keybind = ctrl+b>k=goto_split:up
+keybind = ctrl+b>l=goto_split:right
+keybind = ctrl+b>o=goto_split:next
+keybind = ctrl+b>semicolon=goto_split:previous
+keybind = ctrl+b>shift+equal=toggle_split_zoom
+keybind = ctrl+b>equal=equalize_splits
+keybind = ctrl+b>x=close_surface
+
+# --- resizing a pane, 2 cells at a time (tmux: prefix H / J / K / L) ---
+keybind = ctrl+b>shift+h=resize_split:left,2
+keybind = ctrl+b>shift+j=resize_split:down,2
+keybind = ctrl+b>shift+k=resize_split:up,2
+keybind = ctrl+b>shift+l=resize_split:right,2
+
+# --- tabs (a tmux window) ---
+keybind = ctrl+b>c=new_tab
+keybind = ctrl+b>shift+digit_7=close_tab
+keybind = ctrl+b>comma=prompt_surface_title
+keybind = ctrl+b>ctrl+h=previous_tab
+keybind = ctrl+b>ctrl+l=next_tab
+keybind = ctrl+b>ctrl+shift+h=move_tab:-1
+keybind = ctrl+b>ctrl+shift+l=move_tab:1
+keybind = ctrl+b>tab=last_tab
+keybind = ctrl+b>digit_1=goto_tab:1
+keybind = ctrl+b>digit_2=goto_tab:2
+keybind = ctrl+b>digit_3=goto_tab:3
+keybind = ctrl+b>digit_4=goto_tab:4
+keybind = ctrl+b>digit_5=goto_tab:5
+keybind = ctrl+b>digit_6=goto_tab:6
+keybind = ctrl+b>digit_7=goto_tab:7
+keybind = ctrl+b>digit_8=goto_tab:8
+keybind = ctrl+b>digit_9=goto_tab:9
+
+# --- command prompt and reload ---
+keybind = ctrl+b>shift+semicolon=toggle_command_palette
+keybind = ctrl+b>r=reload_config
+

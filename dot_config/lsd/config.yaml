@@ -1,0 +1,11 @@
+# lsd configuration.
+# theme: custom makes lsd read colors.yaml from this directory. That file is a
+# symlink, swapped between colors-light.yaml and colors-dark.yaml by the fish
+# function theme-sync.
+#
+# Do not put a file path here. lsd only recognises the names "default" and
+# "custom"; anything else is treated as the deprecated 'themes/' directory
+# layout and prints a warning on stdout.
+color:
+  when: auto
+  theme: custom
