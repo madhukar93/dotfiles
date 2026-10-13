@@ -55,6 +55,33 @@ brew "rbenv"
 # sdkman and oh-my-zsh have no Homebrew formula; installed by
 # run_once_after_* scripts below instead.
 
+# -- more CLI tools (added 2026-10-13 from what was installed on the old laptop) --
+brew "dust"        # disk usage
+brew "gitleaks"    # finds secrets in git history
+brew "glances"
+brew "glow"        # renders Markdown in the terminal
+brew "goaccess"
+brew "gum"
+brew "htop"
+brew "k9s"         # Kubernetes terminal viewer; config lives under Library/Application Support/k9s
+brew "kubectx"
+brew "mise"        # language version manager; statusLine in .claude/settings.json uses its node
+brew "mtr"
+brew "nmap"
+brew "oasdiff"
+brew "pgcli"
+brew "pipx"
+brew "poppler"
+brew "pre-commit"
+brew "procs"
+brew "rtk"
+brew "scc"
+brew "shellcheck"
+brew "tldr"
+brew "tre-command"
+brew "uv"
+brew "yq"
+
 {{ if eq .chezmoi.os "darwin" -}}
 # -- macOS-only (casks) -----------------------------------------------------------
 cask "gcloud-cli" # renamed from google-cloud-sdk
@@ -62,6 +89,34 @@ cask "karabiner-elements"
 cask "tailscale-app" # renamed from tailscale
 cask "orbstack"
 cask "font-0xproto-nerd-font" # the one nerd font dot_wezterm.lua actually references
+cask "alacritty"
+cask "bitwarden"
+cask "chatgpt"
+cask "claude"
+cask "claude-code@latest"
+cask "cmux"
+cask "codex"
+cask "comet"
+cask "firefox@developer-edition"
+cask "headroom"
+cask "homerow"
+cask "jordanbaird-ice@beta"
+cask "kde-connect"
+cask "keepingyouawake"
+cask "keyclu"
+cask "notion"
+cask "obsidian" # opens the journal in the personal-system repository
+cask "pearcleaner"
+cask "raycast"
+cask "rectangle"
+cask "slack"
+tap "jbearak/table-viewer"
+cask "jbearak/table-viewer/table-viewer"
+cask "visual-studio-code"
+cask "vscodium@insiders"
+cask "zoom"
+tap "daveshanley/vacuum"
+cask "daveshanley/vacuum/vacuum" # OpenAPI linter
 {{ else -}}
 # -- Linux notes ------------------------------------------------------------------
 # No Homebrew cask equivalents for: wezterm (build/install separately), Karabiner
