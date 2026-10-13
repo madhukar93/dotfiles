@@ -30,7 +30,6 @@ chezmoi init --apply madhukar93/dotfiles
    Brewfile changes
 3. `run_once_after_20-install-oh-my-zsh.sh` / `run_once_after_20-install-fisher.sh` — shell framework/plugin
    manager setup
-4. `run_once_after_30-install-sdkman.sh` — the one dependency in `.zshrc` with no Homebrew formula
 
 ## Manual steps after bootstrapping (can't be scripted)
 

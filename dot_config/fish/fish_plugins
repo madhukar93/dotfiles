@@ -14,4 +14,5 @@ halostatue/fish-go
 evanlucas/fish-kubectl-completions
 2m/fish-history-merge
 jethrokuan/z
-reitzig/sdkman-for-fish@v2.1.0
+meaningful-ooo/sponge
+nickeb96/puffer-fish

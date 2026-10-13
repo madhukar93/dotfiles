@@ -75,5 +75,13 @@ function theme-sync --description 'Point terminal programs at light or dark colo
 
     __theme_sync_atuin $mode
 
+    # Claude Code. Its theme lives in settings.json, not an env var or a
+    # symlinked file, so flip it with jq instead.
+    set -l claude_settings "$HOME/.claude/settings.json"
+    if test -f "$claude_settings"
+        jq --arg mode "$mode" '.theme = $mode' "$claude_settings" > "$claude_settings.tmp"
+        and mv "$claude_settings.tmp" "$claude_settings"
+    end
+
     return 0
 end

@@ -45,8 +45,8 @@ committed.
 
 - **`dot_zshrc`, `dot_zshenv`** — zsh, using oh-my-zsh (`ZSH_THEME="robbyrussell"`), vi keybindings
   (`bindkey -v`), and a large set of tool-specific PATH/env exports and aliases (kubectl, terraform, gcloud,
-  nvm, rbenv/sdkman, Android SDK, Homebrew paths). The SDKMAN block **must stay at the end of the file** —
-  sdkman's own installer requires this.
+  nvm, rbenv, Android SDK, Homebrew paths). Java and other SDKs are managed by mise, not sdkman (removed
+  2026-10-13).
 - **`dot_config/fish/`** — fish shell config (`config.fish`) plus a Fisher plugin list (`fish_plugins`).
   Fish is the interactive shell actually launched by terminals (see `dot_wezterm.lua`'s `default_prog`); zsh
   config still exists and is kept in sync loosely but fish is primary day-to-day.

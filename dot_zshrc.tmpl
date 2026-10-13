@@ -216,7 +216,3 @@ if command -v brew >/dev/null 2>&1; then
   export USE_GKE_GCLOUD_AUTH_PLUGIN=True
 fi
 {{ end -}}
-
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="$HOME/.sdkman"
-[[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
