@@ -78,7 +78,9 @@ alias nnn='command nnn -a'
 
 set -gx EGET_BIN '$HOME/.local/bin'
 
-set -gx NNN_PLUG 'z:autojump;P:preview-tui;f:fzplug;y:cbcopy-mac;p:cbpaste-mac;e:-!sudo -E vim "$nnn"*'
+set -gx NNN_PLUG 'z:autojump;P:preview-tui;f:fzplug;e:-!sudo -E vim "$nnn"*'
+# Clipboard plugins exist only for macOS
+test (uname) = Darwin; and set -gx NNN_PLUG "$NNN_PLUG;y:cbcopy-mac;p:cbpaste-mac"
 set -gx NNN_FIFO "/tmp/nnn.fifo"
 set -gx NODE_OPTIONS --no-deprecation
 

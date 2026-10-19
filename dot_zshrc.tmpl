@@ -117,7 +117,7 @@ compinit
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 export EDITOR="nvim"
-{{ if .personal -}}
+{{ if and .personal (eq .chezmoi.os "darwin") -}}
 export ANDROID_SDK_ROOT=$HOME/Library/Android/sdk
 export PATH=$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/tools:$ANDROID_SDK_ROOT/platform-tools:$PATH
 {{ end -}}
@@ -169,11 +169,11 @@ export PATH="$PATH:$GOBIN"
 export KUBECTL_EXTERNAL_DIFF='dyff between --color=on --omit-header --set-exit-code'
 
 function cb_argocd_pass {
-	kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d | pbcopy
+	kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d | clipcopy
 }
 
 function cb_grafana_pass {
-	kubectl get secret monitoring-grafana -o jsonpath="{.data.admin-password}" -n monitoring | base64 -d | pbcopy
+	kubectl get secret monitoring-grafana -o jsonpath="{.data.admin-password}" -n monitoring | base64 -d | clipcopy
 }
 
 alias kall="kubectl api-resources --verbs=list --namespaced -o name | xargs -n 1 kubectl get --show-kind --ignore-not-found"
