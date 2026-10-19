@@ -1,0 +1,10 @@
+#!/bin/sh
+# Re-runs whenever the data-links script changes.
+# data-links hash: {{ include "dot_local/bin/executable_data-links" | sha256sum }}
+if [ -L /data ] && [ ! -d /data/ ]; then
+  echo "/data is not mounted; run 'data-links install' once it is." >&2
+  exit 1
+fi
+if [ -d /data/ ]; then
+  "$HOME/.local/bin/data-links" install
+fi

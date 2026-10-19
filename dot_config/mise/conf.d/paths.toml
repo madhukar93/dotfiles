@@ -1,0 +1,3 @@
+# Bin folders for `go install` and `gem install` (GEM_HOME is ~/.gem, set in config.fish).
+[env]
+_.path = ["~/go/bin", "~/.gem/bin"]

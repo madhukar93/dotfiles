@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# Keep large toolchain and package folders on the /data disk, with a symlink at
+# each usual path so every tool keeps finding them.
+#
+#   data-links install    move each folder to /data and link it back (missing ones start on /data)
+#   data-links uninstall  move each folder back home and remove the link
+#   data-links status     show where each folder lives
+#
+# run_onchange_after_20-data-links.sh runs `install` on `chezmoi apply` when /data exists.
+set -euo pipefail
+
+DATA=/data
+
+# <path under $HOME>:<folder under $DATA>
+LINKS=(
+  .local/share/mise:mise
+  .cache/mise:mise-cache
+  .rustup:rustup
+  .cargo:cargo
+  go:go
+  .gem:gem
+  .local/share/uv:uv
+  .local/share/pipx:pipx
+  .npm:npm-cache
+  .cache/uv:uv-cache
+)
+
+# Copy then delete, so an interrupted move leaves the original in place.
+move() { cp -a "$1" "$2" && rm -rf "$1"; }
+
+need_data() {
+  [ -d "$DATA/" ] || { echo "data-links: $DATA is missing or not mounted" >&2; exit 1; }
+}
+
+install() {
+  need_data
+  local failed=0 entry home data
+  for entry in "${LINKS[@]}"; do
+    home=$HOME/${entry%%:*} data=$DATA/${entry##*:}
+    if [ -L "$home" ]; then
+      [ "$(readlink "$home")" = "$data" ] && continue
+      echo "skip  ~/${entry%%:*}: links somewhere else ($(readlink "$home"))" >&2; failed=1; continue
+    fi
+    if [ -e "$home" ]; then
+      if [ -e "$data" ]; then
+        echo "skip  ~/${entry%%:*}: both it and $data exist; merge them by hand" >&2; failed=1; continue
+      fi
+      move "$home" "$data"
+    else
+      mkdir -p "$data"
+    fi
+    mkdir -p "$(dirname "$home")"
+    ln -s "$data" "$home"
+    echo "link  ~/${entry%%:*} -> $data"
+  done
+  return $failed
+}
+
+uninstall() {
+  need_data
+  local entry home data
+  for entry in "${LINKS[@]}"; do
+    home=$HOME/${entry%%:*} data=$DATA/${entry##*:}
+    [ -L "$home" ] && [ "$(readlink "$home")" = "$data" ] || continue
+    rm "$home"
+    if [ -e "$data" ]; then move "$data" "$home"; fi
+    echo "back  ~/${entry%%:*}"
+  done
+}
+
+status() {
+  local entry home data
+  for entry in "${LINKS[@]}"; do
+    home=$HOME/${entry%%:*} data=$DATA/${entry##*:}
+    if [ -L "$home" ] && [ "$(readlink "$home")" = "$data" ]; then echo "on /data   ~/${entry%%:*}"
+    elif [ -e "$home" ]; then echo "in home    ~/${entry%%:*}"
+    else echo "missing    ~/${entry%%:*}"; fi
+  done
+}
+
+case "${1:-}" in
+  install | uninstall | status) "$1" ;;
+  *) echo "usage: data-links install|uninstall|status" >&2; exit 2 ;;
+esac
