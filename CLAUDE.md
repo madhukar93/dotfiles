@@ -106,6 +106,10 @@ committed.
   npm cache) and `~/code` live on `/data` with a symlink at each usual path. The script holds the one list of folders and has
   `install`, `uninstall` and `status`; the run script calls `install` on apply and skips machines without
   `/data`. `dot_config/mise/conf.d/paths.toml` puts `~/go/bin` and `~/.gem/bin` on PATH via mise.
+- **`dot_config/niri/`, `dot_config/noctalia/config.toml`, `dot_local/bin/executable_niri-wsl`** — the niri
+  desktop with the Noctalia shell, from CachyOS's `cachyos-niri-noctalia` package (`/etc/skel`), with the terminal
+  shortcut changed to kitty. Linux only. In WSL, `niri-wsl` runs niri as a window inside WSLg on the GPU (Mesa
+  d3d12 driver); Mod is Alt there because Windows takes Super.
 - **`dot_claude/skills/aws-login/SKILL.md`** — a Claude Code skill so agents re-authenticate to AWS on their
   own rather than stalling on an expired token. It is the only thing under `~/.claude` that this repo manages;
   the rest of that directory is work-specific and stays out.

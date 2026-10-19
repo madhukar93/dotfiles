@@ -5,6 +5,12 @@ README.md
 .config/karabiner
 {{ end -}}
 
+{{ if ne .chezmoi.os "linux" -}}
+.config/niri
+.config/noctalia
+.local/bin/niri-wsl
+{{ end -}}
+
 # Claude Code skills: share only the skills listed with "!". Everything else in
 # ~/.claude/skills (third-party installs, work skills, downloaded caches) stays local.
 .claude/skills/*

@@ -1,0 +1,7 @@
+#!/bin/sh
+# Start niri as a window inside WSLg. WSL has no /dev/dri, so Mesa's d3d12 driver is forced
+# to reach the GPU through /dev/dxg; without it niri falls back to CPU rendering (llvmpipe).
+# Apps started from niri inherit these, so they render on the same GPU.
+export GALLIUM_DRIVER=d3d12
+export MESA_D3D12_DEFAULT_ADAPTER_NAME="${MESA_D3D12_DEFAULT_ADAPTER_NAME:-NVIDIA}"
+exec niri "$@"
