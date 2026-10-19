@@ -16,9 +16,16 @@ end
 
 fish_user_key_bindings
 
-eval "$(/opt/homebrew/bin/brew shellenv)"
+# Homebrew: Apple Silicon, Intel macOS, or Linux (Linuxbrew)
+for __brew in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxbrew/bin/brew
+    if test -x $__brew
+        eval "$($__brew shellenv)"
+        break
+    end
+end
+set -e __brew
 
-direnv hook fish | source
+command -q direnv; and direnv hook fish | source
 set -gx EDITOR nvim
 
 set -gx fish_tmux_autoquit false
@@ -49,7 +56,9 @@ abbr -a ll 'ls -la'
 abbr -a lt 'ls --tree'
 
 # source (kubebuilder completion fish | psub)
-source "$(brew --prefix)/share/google-cloud-sdk/path.fish.inc"
+if command -q brew; and test -f (brew --prefix)/share/google-cloud-sdk/path.fish.inc
+    source (brew --prefix)/share/google-cloud-sdk/path.fish.inc
+end
 
 fish_add_path -g "$HOME/.local/bin"
 
@@ -78,7 +87,9 @@ set -gx NODE_OPTIONS --no-deprecation
 # status --is-interactive; and rbenv init - --no-rehash fish | source
 
 fish_add_path -g "$HOME/.pub-cache/bin"
-alias tailscale /Applications/Tailscale.app/Contents/MacOS/Tailscale
+if test -x /Applications/Tailscale.app/Contents/MacOS/Tailscale
+    alias tailscale /Applications/Tailscale.app/Contents/MacOS/Tailscale
+end
 
 # Light/dark theme for the programs running inside the terminal.
 # The terminal itself already follows the system appearance via
@@ -107,20 +118,18 @@ source ~/.orbstack/shell/init2.fish 2>/dev/null || :
 # Enable AWS CLI autocompletion
 complete --command aws --no-files --arguments '(begin; set --local --export COMP_SHELL fish; set --local --export COMP_LINE (commandline); aws_completer | sed \'s/ $//\'; end)'
 
-# If you need to have mysql-client first in your PATH, run:
-fish_add_path /opt/homebrew/opt/mysql-client/bin
-
-# For compilers to find mysql-client you may need to set:
-set -gx LDFLAGS -L/opt/homebrew/opt/mysql-client/lib
-set -gx CPPFLAGS -I/opt/homebrew/opt/mysql-client/include
-
-# For pkgconf to find mysql-client you may need to set:
-set -gx PKG_CONFIG_PATH /opt/homebrew/opt/mysql-client/lib/pkgconfig
+# mysql-client from Homebrew (macOS only; on Linux use the distro package)
+if test -d /opt/homebrew/opt/mysql-client
+    fish_add_path /opt/homebrew/opt/mysql-client/bin
+    set -gx LDFLAGS -L/opt/homebrew/opt/mysql-client/lib
+    set -gx CPPFLAGS -I/opt/homebrew/opt/mysql-client/include
+    set -gx PKG_CONFIG_PATH /opt/homebrew/opt/mysql-client/lib/pkgconfig
+end
 
 if status is-interactive
     # Add this line to initialize Atuin
-    atuin init fish | source
-    mise activate fish | source
+    command -q atuin; and atuin init fish | source
+    command -q mise; and mise activate fish | source
 end
 
 function claude-personal
