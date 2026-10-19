@@ -23,6 +23,7 @@ LINKS=(
   .local/share/pipx:pipx
   .npm:npm-cache
   .cache/uv:uv-cache
+  code:code
 )
 
 # Copy then delete, so an interrupted move leaves the original in place.

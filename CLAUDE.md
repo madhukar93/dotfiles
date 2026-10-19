@@ -103,7 +103,7 @@ committed.
   the same directory; the directory is intentionally **not** `exact_`, so chezmoi leaves fisher's files alone.
 - **`dot_local/bin/executable_data-links`, `run_onchange_after_20-data-links.sh.tmpl`** — on a machine with a
   `/data` disk (the CachyOS WSL PC), toolchain and package folders (mise, rustup, cargo, go, gems, uv, pipx,
-  npm cache) live on `/data` with a symlink at each usual path. The script holds the one list of folders and has
+  npm cache) and `~/code` live on `/data` with a symlink at each usual path. The script holds the one list of folders and has
   `install`, `uninstall` and `status`; the run script calls `install` on apply and skips machines without
   `/data`. `dot_config/mise/conf.d/paths.toml` puts `~/go/bin` and `~/.gem/bin` on PATH via mise.
 - **`dot_claude/skills/aws-login/SKILL.md`** — a Claude Code skill so agents re-authenticate to AWS on their
