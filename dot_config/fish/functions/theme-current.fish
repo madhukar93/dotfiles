@@ -1,4 +1,4 @@
-function theme-current --description 'Print light or dark, matching the macOS appearance'
+function theme-current --description 'Print light or dark, matching the system appearance (macOS or Windows via WSL)'
     # An explicit argument wins. This is what makes the whole theme setup
     # testable without changing the real system appearance.
     if set -q argv[1]
@@ -15,10 +15,25 @@ function theme-current --description 'Print light or dark, matching the macOS ap
     # macOS leaves AppleInterfaceStyle unset in light mode and sets it to
     # "Dark" in dark mode. This is the same signal Ghostty follows, so the
     # terminal and the programs inside it stay in agreement.
-    set -l style (defaults read -g AppleInterfaceStyle 2>/dev/null)
-    if test "$style" = Dark
-        echo dark
-    else
-        echo light
+    if command -q defaults
+        set -l style (defaults read -g AppleInterfaceStyle 2>/dev/null)
+        if test "$style" = Dark
+            echo dark
+        else
+            echo light
+        end
+        return 0
     end
+
+    # WSL: Windows stores AppsUseLightTheme as 0x0 in dark mode and 0x1 in
+    # light mode. reg.exe answers in about 30 ms.
+    if command -q reg.exe
+        if reg.exe query 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' /v AppsUseLightTheme 2>/dev/null | string match -q '*0x0*'
+            echo dark
+            return 0
+        end
+    end
+
+    # Other Linux: no single system-wide signal, so default to light.
+    echo light
 end
