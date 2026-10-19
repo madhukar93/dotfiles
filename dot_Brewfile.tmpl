@@ -44,7 +44,8 @@ brew "dyff"
 brew "stern"
 brew "krew"
 brew "argocd"
-brew "terraform"
+tap "hashicorp/tap" # homebrew-core dropped terraform after its license change
+brew "hashicorp/tap/terraform"
 brew "awscli"
 brew "gh"
 
