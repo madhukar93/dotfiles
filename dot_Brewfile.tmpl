@@ -49,10 +49,9 @@ brew "hashicorp/tap/terraform"
 brew "awscli"
 brew "gh"
 
-# -- language version managers ---------------------------------------------------
-brew "pyenv"
-brew "pyenv-virtualenv"
-brew "rbenv"
+# -- languages -------------------------------------------------------------------
+# Languages and their tooling (Node, Python, Go, Rust, Ruby, Java, uv, pipx) are
+# managed by mise (~/.config/mise/config.toml), not Homebrew.
 # oh-my-zsh has no Homebrew formula; installed by run_once_after_* scripts below instead.
 
 # -- more CLI tools (added 2026-10-13 from what was installed on the old laptop) --
@@ -70,7 +69,6 @@ brew "mtr"
 brew "nmap"
 brew "oasdiff"
 brew "pgcli"
-brew "pipx"
 brew "poppler"
 brew "pre-commit"
 brew "procs"
@@ -79,7 +77,6 @@ brew "scc"
 brew "shellcheck"
 brew "tldr"
 brew "tre-command"
-brew "uv"
 brew "yq"
 
 {{ if eq .chezmoi.os "darwin" -}}

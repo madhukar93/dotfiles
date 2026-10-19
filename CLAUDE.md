@@ -45,8 +45,8 @@ committed.
 
 - **`dot_zshrc`, `dot_zshenv`** — zsh, using oh-my-zsh (`ZSH_THEME="robbyrussell"`), vi keybindings
   (`bindkey -v`), and a large set of tool-specific PATH/env exports and aliases (kubectl, terraform, gcloud,
-  nvm, rbenv, Android SDK, Homebrew paths). Java and other SDKs are managed by mise, not sdkman (removed
-  2026-10-13).
+  Android SDK, Homebrew paths). All languages and their tooling (Node, Python, Go, Rust, Ruby, Java, uv,
+  pipx) are managed by mise, not Homebrew, nvm, pyenv, rbenv or sdkman (switched over 2026-10-13 to 2026-10-19).
 - **`dot_config/fish/`** — fish shell config (`config.fish`) plus a Fisher plugin list (`fish_plugins`).
   Fish is the interactive shell actually launched by terminals (see `dot_wezterm.lua`'s `default_prog`); zsh
   config still exists and is kept in sync loosely but fish is primary day-to-day.
@@ -92,7 +92,7 @@ committed.
   when AWS changes the sign-in page, is in `dot_local/share/aws-login-auto/README.md`.
 - **`run_onchange_after_40-install-aws-login-auto.sh.tmpl`** — installs the one dependency
   (`playwright-core`, which drives the already-installed Chrome rather than downloading a browser). Neither
-  Chrome nor Node is in the Brewfile, deliberately: Node is managed by nvm here, so provisioning it through
+  Chrome nor Node is in the Brewfile, deliberately: Node is managed by mise here, so provisioning it through
   Homebrew would conflict.
 - **`dot_config/fish/functions/aws*.fish`, `dot_config/fish/functions/__aws_profile_risk.fish`,
   `dot_config/fish/conf.d/aws_profile_workspace_colour.fish`** — making the selected AWS account visible so

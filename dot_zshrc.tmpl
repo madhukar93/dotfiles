@@ -71,7 +71,7 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git tmux docker vi-mode z kubectl macos dotenv terraform aws zsh-completions direnv zsh-nvm)
+plugins=(git tmux docker vi-mode z kubectl macos dotenv terraform aws zsh-completions direnv)
 
 bindkey '^X' create_completion
 # User configuration
@@ -130,10 +130,9 @@ if command -v atuin >/dev/null 2>&1; then
   eval "$(atuin init zsh)"
 fi
 
-# https://github.com/nvm-sh/nvm/issues/2724#issuecomment-1097815269
-export NVM_DIR="$HOME/.nvm"
-#[ -s "/usr/local/opt/nvm/nvm.sh" ] && \. "/usr/local/opt/nvm/nvm.sh"  # This loads nvm
-#[ -s "/usr/local/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/usr/local/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+fi
 
 alias amend="git commit --all --amend --no-verify"
 alias fixup="git commit --no-verify -am fixup"
