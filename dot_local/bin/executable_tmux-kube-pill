@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Render the current kubernetes context as a catppuccin-mocha status pill.
+#
+# Fixes two problems with the tmux-k8s plugin's own rendering:
+#   1. it showed "N/A:N/A" whenever the current context had no default
+#      namespace set (e.g. do-nyc3-storyteller-do). Here, a context with no
+#      namespace just shows the context name, no namespace suffix.
+#   2. it drew a hardcoded white-on-green block. Here we use catppuccin mocha
+#      colours: a red pill for any context whose name contains "prod" (a safety
+#      cue), sapphire for everything else.
+#
+# Prints nothing at all when there is no current context, so the tmux status
+# segment disappears instead of showing a placeholder.
+
+ctx=$(kubectl config current-context 2>/dev/null) || exit 0
+[ -z "$ctx" ] && exit 0
+
+ns=$(kubectl config view --minify --output 'jsonpath={..namespace}' 2>/dev/null)
+label="$ctx"
+[ -n "$ns" ] && label="$ctx:$ns"
+
+# catppuccin mocha colours
+crust="#11111b"
+surface0="#313244"
+text="#cdd6f4"
+case "$ctx" in
+  *prod*) accent="#f38ba8" ;;  # red  -> production warning
+  *)      accent="#74c7ec" ;;  # sapphire
+esac
+
+# leading space separates this pill from the session pill to its left.
+# pill shape:  <left half-circle><icon block><text block><right half-circle>
+printf ' #[fg=%s,bg=default]#[fg=%s,bg=%s] ☸ #[fg=%s,bg=%s] %s #[fg=%s,bg=default]#[none]' \
+  "$accent" "$crust" "$accent" "$text" "$surface0" "$label" "$surface0"

@@ -45,6 +45,12 @@ tmux_conf_new_session_prompt=false
 #  - false (default)
 tmux_conf_24b_colour=true
 
+# hand the status line over to the catppuccin/tmux plugin (configured near the
+# plugin list below). with the theme disabled, oh-my-tmux does not draw or style
+# the status line, so catppuccin owns it. to go back to oh-my-tmux's own theme,
+# set this to 'enabled' (or remove the line) and remove the catppuccin block.
+tmux_conf_theme=disabled
+
 # default theme
 tmux_conf_theme_colour_1="#080808"    # dark gray
 tmux_conf_theme_colour_2="#303030"    # gray
@@ -383,6 +389,38 @@ set -g @plugin 'fcsonline/tmux-thumbs'
 set -g @plugin 'schasse/tmux-jump'
 set -g @plugin 'tmux-plugins/tmux-logging'
 set -g @plugin 'laktak/extrakto'
+
+# -- catppuccin theme ----------------------------------------------------------
+# catppuccin draws the whole status line; oh-my-tmux's own theme is turned off
+# above via 'tmux_conf_theme=disabled'. pinned to a release tag so an unattended
+# plugin update cannot change the look without warning.
+set -g @plugin 'catppuccin/tmux#v2.3.1'
+
+# flavor: mocha is the darkest catppuccin variant (base #1e1e2e), closest to the
+# previous very-dark theme. other choices: latte (light), frappe, macchiato.
+set -g @catppuccin_flavor 'mocha'
+
+# window tabs: rounded pill style; show the window NAME (#W) like the old
+# "#I #W" format (catppuccin prints the window number separately on the left).
+set -g @catppuccin_window_status_style 'rounded'
+set -g @catppuccin_window_number_position 'left'
+set -g @catppuccin_window_text ' #W'
+set -g @catppuccin_window_current_text ' #W'
+
+# assemble the status line ourselves (required by catppuccin v2).
+# left: catppuccin session pill, then a catppuccin-styled kubernetes pill drawn
+#       by ~/.local/bin/tmux-kube-pill (it hides itself when there is no current
+#       context, and does NOT use the tmux-k8s plugin's green/red rendering).
+#       path kept portable (no absolute prefix) so it also works on linux/wsl.
+# right: current application, then user@host (useful over ssh). time, battery
+# and date are intentionally left out because the macOS menu bar shows them.
+# the host module normally shows only #H; override its text to user@host.
+set -g @catppuccin_host_text '#(whoami)@#H'
+set -g status-left-length 100
+set -g status-right-length 100
+set -g status-left '#{E:@catppuccin_status_session}#(~/.local/bin/tmux-kube-pill)'
+set -g status-right '#{E:@catppuccin_status_application}'
+set -ag status-right '#{E:@catppuccin_status_host}'
 
 # this isn't working
 # set -g @plugin 'mrjones2014/smart-splits.nvim'
