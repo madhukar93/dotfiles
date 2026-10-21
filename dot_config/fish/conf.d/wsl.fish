@@ -31,4 +31,10 @@ if test -d /mnt/wslg/runtime-dir
     test -S /run/user/(id -u)/bus; and set -gx XDG_RUNTIME_DIR /run/user/(id -u)
     set -gx WAYLAND_DISPLAY wayland-0
     set -gx DISPLAY :0
+
+    # WSL has no /dev/dri, so Mesa draws on the CPU (llvmpipe) unless it is told to reach the GPU through
+    # /dev/dxg with its d3d12 driver. Chromium/Electron apps blocklist WebGL on llvmpipe. Pick the NVIDIA
+    # adapter, because d3d12 otherwise picks the integrated AMD one. Not yet verified for ordinary apps.
+    set -gx GALLIUM_DRIVER d3d12
+    set -gx MESA_D3D12_DEFAULT_ADAPTER_NAME NVIDIA
 end
