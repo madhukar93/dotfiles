@@ -1,3 +1,8 @@
+# Start or attach to tmux in interactive shells only, and never inside tmux itself
+if status is-interactive; and not set -q TMUX; and command -q tmux; and test "$TERM_PROGRAM" != vscode
+    exec tmux new-session -A -s main
+end
+
 function fish_user_key_bindings
     # from `help editor`
     # Execute this once per mode that emacs bindings should be used in
@@ -28,7 +33,6 @@ set -e __brew
 command -q direnv; and direnv hook fish | source
 set -gx EDITOR nvim
 
-set -gx fish_tmux_autoquit false
 set -gx GPG_TTY (tty)
 
 set -gx FZF_DEFAULT_COMMAND "fd -a . (pwd)"
