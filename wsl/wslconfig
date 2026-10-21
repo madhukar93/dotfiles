@@ -1,0 +1,3 @@
+[wsl2]
+# 48 of 64 GB; leaves about 15 GB for Windows. WSL defaults to half of RAM.
+memory=48GB

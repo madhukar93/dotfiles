@@ -1,5 +1,6 @@
 CLAUDE.md
 README.md
+wsl
 
 {{ if ne .chezmoi.os "darwin" -}}
 .config/karabiner
@@ -10,6 +11,7 @@ README.md
 .config/noctalia
 .local/bin/niri-wsl
 .local/share/flatpak
+.config/fish/conf.d/wsl.fish
 {{ end -}}
 
 # Claude Code skills: share only the skills listed with "!". Everything else in
