@@ -77,10 +77,17 @@ function theme-sync --description 'Point terminal programs at light or dark colo
 
     # Claude Code. Its theme lives in settings.json, not an env var or a
     # symlinked file, so flip it with jq instead.
+    # Write only when the theme differs and jq produced output: jq exits 0 with no
+    # output on an empty file, and the mv then replaced settings.json with an
+    # empty file (2026-10-21). Skipping unchanged themes also avoids racing
+    # Claude Code's own writes on every new shell.
     set -l claude_settings "$HOME/.claude/settings.json"
-    if test -f "$claude_settings"
+    if test -s "$claude_settings"
+        and test (jq -r '.theme // empty' "$claude_settings" 2>/dev/null) != "$mode"
         jq --arg mode "$mode" '.theme = $mode' "$claude_settings" > "$claude_settings.tmp"
+        and test -s "$claude_settings.tmp"
         and mv "$claude_settings.tmp" "$claude_settings"
+        or rm -f "$claude_settings.tmp"
     end
 
     return 0

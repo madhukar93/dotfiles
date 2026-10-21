@@ -44,3 +44,23 @@
   without admin rights. Setting `enabled = false` would also break the `/data` boot command.
 - `memory=48GB` in `%USERPROFILE%\.wslconfig` raises WSL's share of RAM from half (about 30 GB of 64) to 48 GB;
   it takes effect after the WSL virtual machine restarts.
+
+## Claude Code settings were wiped (2026-10-21)
+
+**Symptom:** vim keybindings and the claude-hud status line disappeared. `~/.claude/settings.json` was 0 bytes,
+last changed at 11:43. Plugins under `~/.claude/plugins` were intact.
+
+**Fix:** `chezmoi apply --force ~/.claude/settings.json` restored it from the dotfiles. A model chosen with
+`/model` after the last commit was lost and had to be chosen again.
+
+**Cause: not proven.** At 11:43:03 a new fish terminal ran `claude-desktop`, which hung and crashed seconds later.
+Two candidates for the first empty write: claude-desktop writing the file when it was killed, or `theme-sync`
+(run by every new fish shell) reading the file while another program was rewriting it. Either way, the old
+`theme-sync` made it stick: `jq` on an empty file exits 0 with no output, and the following `mv` saved that.
+
+**Hardening:** `theme-sync` now writes only if the file is non-empty, the theme actually differs, and `jq`
+produced output; otherwise it removes its temp file and leaves settings alone. Tested on an empty file, a changed
+theme, an unchanged theme and broken JSON.
+
+**If it happens again:** `ls -l ~/.claude/settings.json`; if it is small or empty, restore with chezmoi as above.
+Claude Code also keeps copies of `~/.claude.json` (a different file) in `~/.claude/backups/`.

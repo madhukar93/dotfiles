@@ -13,7 +13,7 @@ dropped, and how each problem was diagnosed. The install and uninstall steps are
 | [fonts-and-icons.md](fonts-and-icons.md) | Icons show as `�` or empty boxes in Windows Terminal |
 | [tmux-theme.md](tmux-theme.md) | The tmux status bar has no theme |
 | [vscodium-flatpak.md](vscodium-flatpak.md) | VSCodium does not start, or its startup messages look alarming |
-| [chezmoi-and-brew-notes.md](chezmoi-and-brew-notes.md) | chezmoi prompts fail, terraform will not install, push is rejected |
+| [chezmoi-and-brew-notes.md](chezmoi-and-brew-notes.md) | chezmoi prompts fail, terraform will not install, push is rejected, Claude settings wiped |
 
 ## How these notes were written
 

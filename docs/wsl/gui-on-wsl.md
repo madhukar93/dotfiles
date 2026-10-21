@@ -71,5 +71,8 @@ Known limit: X11 apps cannot run inside niri, because `xwayland-satellite` refus
 4. `Missing X server or $DISPLAY` means the app chose X11 but could not reach it (see vscodium-flatpak.md).
 5. `failed to get driver name` / `ZINK ... VK_ERROR_INCOMPATIBLE_DRIVER` warnings are normal under WSL: Mesa
    tries other drivers before d3d12. They are harmless if the app starts.
-6. Slow or CPU-drawn app: try `GALLIUM_DRIVER=d3d12` (not yet checked for ordinary apps).
+6. Do **not** set `GALLIUM_DRIVER=d3d12` for every app. It was added to `wsl.fish` on 2026-10-21 to silence
+   claude-desktop's `WebGL1 blocklisted` warning; claude-desktop then hung ("GPU process exited unexpectedly",
+   "Crashing because hung") and the change was reverted. The warning alone is harmless (software WebGL).
+   Test such a variable on one app from a terminal first. niri is the exception: it needs it (`niri-wsl`).
 7. Microsoft's guide: "Diagnosing cannot open display type issues with WSLg" (microsoft/wslg wiki).
