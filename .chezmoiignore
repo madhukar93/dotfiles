@@ -9,6 +9,7 @@ README.md
 .config/niri
 .config/noctalia
 .local/bin/niri-wsl
+.local/share/flatpak
 {{ end -}}
 
 # Claude Code skills: share only the skills listed with "!". Everything else in
