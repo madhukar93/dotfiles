@@ -110,6 +110,8 @@ committed.
   desktop with the Noctalia shell, from CachyOS's `cachyos-niri-noctalia` package (`/etc/skel`), with the terminal
   shortcut changed to kitty. Linux only. In WSL, `niri-wsl` runs niri as a window inside WSLg on the GPU (Mesa
   d3d12 driver); Mod is Alt there because Windows takes Super.
+- **`docs/wsl/`** — design notes and troubleshooting for the WSL setup (why, alternatives rejected, how each problem
+  was diagnosed). Start at `docs/wsl/README.md`. Not deployed by chezmoi.
 - **`wsl/`** — not deployed by chezmoi. The CachyOS WSL machine pieces outside `$HOME`: `/etc/wsl.conf`, the
   Windows `.wslconfig`, the `/data` disk mount script and logon task, and the Nerd Font + Windows Terminal font,
   installed or removed by `wsl/windows-setup.ps1`. `wsl/README.md` has the from-scratch steps.
