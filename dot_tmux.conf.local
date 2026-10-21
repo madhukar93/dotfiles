@@ -393,8 +393,9 @@ set -g @plugin 'laktak/extrakto'
 # -- catppuccin theme ----------------------------------------------------------
 # catppuccin draws the whole status line; oh-my-tmux's own theme is turned off
 # above via 'tmux_conf_theme=disabled'. pinned to a release tag so an unattended
-# plugin update cannot change the look without warning.
-set -g @plugin 'catppuccin/tmux#v2.3.1'
+# plugin update cannot change the look without warning. chezmoi downloads it
+# (.chezmoiexternal.toml) and it is loaded with `run` below, after its options;
+# a tpm '@plugin catppuccin/tmux#v2.3.1' line fails to install under oh-my-tmux.
 
 # flavor: mocha is the darkest catppuccin variant (base #1e1e2e), closest to the
 # previous very-dark theme. other choices: latte (light), frappe, macchiato.
@@ -416,6 +417,7 @@ set -g @catppuccin_window_current_text ' #W'
 # and date are intentionally left out because the macOS menu bar shows them.
 # the host module normally shows only #H; override its text to user@host.
 set -g @catppuccin_host_text '#(whoami)@#H'
+run ~/.config/tmux/plugins/catppuccin/tmux/catppuccin.tmux
 set -g status-left-length 100
 set -g status-right-length 100
 set -g status-left '#{E:@catppuccin_status_session}#(~/.local/bin/tmux-kube-pill)'

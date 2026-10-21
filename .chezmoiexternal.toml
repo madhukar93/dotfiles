@@ -1,0 +1,8 @@
+# catppuccin/tmux, pinned to a release. Loaded with `run` in ~/.tmux.conf.local instead of
+# tpm: oh-my-tmux's plugin discovery keeps the quotes tmux adds around 'catppuccin/tmux#v2.3.1',
+# so tpm tries to clone '"catppuccin/tmux' and fails.
+[".config/tmux/plugins/catppuccin/tmux"]
+    type = "archive"
+    url = "https://github.com/catppuccin/tmux/archive/refs/tags/v2.3.1.tar.gz"
+    exact = true
+    stripComponents = 1
