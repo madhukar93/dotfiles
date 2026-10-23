@@ -122,6 +122,8 @@ committed.
   desktop with the Noctalia shell, from CachyOS's `cachyos-niri-noctalia` package (`/etc/skel`), with the terminal
   shortcut changed to kitty. Linux only. In WSL, `niri-wsl` runs niri as a window inside WSLg on the GPU (Mesa
   d3d12 driver); Mod is Alt there because Windows takes Super.
+  `dot_local/share/applications/niri-wsl.desktop.tmpl` lists `niri-wsl` in the Windows Start menu as "niri".
+  Noctalia started on its own from the Start menu shows nothing: WSLg's display server has no layer-shell protocol.
 - **`docs/wsl/`** — design notes and troubleshooting for the WSL setup (why, alternatives rejected, how each problem
   was diagnosed). Start at `docs/wsl/README.md`. Not deployed by chezmoi.
 - **`wsl/`** — not deployed by chezmoi. The CachyOS WSL machine pieces outside `$HOME`: `/etc/wsl.conf`, the

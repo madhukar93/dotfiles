@@ -11,6 +11,7 @@ docs
 .config/niri
 .config/noctalia
 .local/bin/niri-wsl
+.local/share/applications/niri-wsl.desktop
 .local/share/flatpak
 .config/fish/conf.d/wsl.fish
 {{ end -}}
