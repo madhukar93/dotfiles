@@ -110,8 +110,11 @@ committed.
   bind-mounts it at `/home/linuxbrew/.linuxbrew` through two systemd units (a symlink would break Homebrew's
   ready-built packages). Sorts before the Homebrew installer so a dual-boot install reuses it.
 - **`run_onchange_after_25-system-data-links.sh.tmpl`** — Linux only. `data-links` for root's folders, with
-  `sudo`: `/var/lib/flatpak` (flatpak's system-wide apps) and `/var/cache/pacman/pkg` (pacman's downloads) link
-  to `/data`, so a dual-boot install on the same disk shares them. Details in `docs/wsl/toolchains-on-data.md`.
+  `sudo`: the folders inside `/var/lib/flatpak` (flatpak's system-wide apps) except `exports`, and
+  `/var/cache/pacman/pkg` (pacman's downloads), link to `/data`, so a dual-boot install on the same disk shares
+  them. `exports` and `flatpak-start-menu.service` keep flatpak apps in the Windows Start menu, and
+  `/usr/local/share/applications` links to `~/.local/share/applications` so AppImages added with Gear Lever
+  appear there too. Details in `docs/wsl/toolchains-on-data.md`.
 - **`run_onchange_after_50-install-sudo-mcp.sh.tmpl`** — Linux only. Builds sudo-mcp (an MCP server that runs
   `sudo` behind a password dialog) from `github.com/madhukar93/sudo-mcp` and registers it with
   `claude mcp add --scope user`. Needs `zenity` for the dialog.

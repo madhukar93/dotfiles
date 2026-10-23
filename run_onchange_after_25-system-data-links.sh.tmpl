@@ -48,8 +48,50 @@ link() {
   echo "link  $src -> $data"
 }
 
-link /var/lib/flatpak /data/flatpak app runtime
+# flatpak: everything on /data except exports, its 200 KB of menu entries. WSLg builds the
+# Windows Start menu from /var/lib/flatpak/exports/share/applications, but looks for that
+# folder only once, when WSL starts, which is before a Windows task attaches /data.
+fp=/var/lib/flatpak
+if [ "$(readlink "$fp")" = /data/flatpak ]; then
+  # Earlier versions linked the whole folder.
+  sudo rm "$fp"
+  sudo mkdir "$fp"
+  [ ! -e /data/flatpak/exports ] || move /data/flatpak/exports "$fp/exports"
+fi
+sudo mkdir -p "$fp"
+link "$fp/app" /data/flatpak/app .
+link "$fp/runtime" /data/flatpak/runtime .
+link "$fp/repo" /data/flatpak/repo objects
+link "$fp/appstream" /data/flatpak/appstream
+link "$fp/.removed" /data/flatpak/.removed
 link /var/cache/pacman/pkg /data/pacman-pkg
+
+# At WSL start the menu entries point into the not yet attached disk, so WSLg drops them.
+# Once the disk is mounted, re-create each one: WSLg watches the folder and reads new entries.
+disk=$(systemd-escape -p --suffix=mount "$(findmnt -no TARGET --target /data/)")
+printf '%s\n' "[Unit]
+Description=Show flatpak apps in the Windows Start menu once the /data disk is attached
+After=$disk
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'cd $fp/exports/share/applications && for f in *.desktop; do t=\$\$(readlink \"\$\$f\") && rm \"\$\$f\" && ln -s \"\$\$t\" \"\$\$f\"; done'
+
+[Install]
+WantedBy=$disk" | sudo tee /etc/systemd/system/flatpak-start-menu.service >/dev/null
+sudo systemctl daemon-reload
+sudo systemctl enable flatpak-start-menu.service
+
+# WSLg does not read ~/.local/share/applications, where Gear Lever puts AppImage menu
+# entries, but it does read /usr/local/share/applications.
+user_apps="$HOME/.local/share/applications"
+mkdir -p "$user_apps"
+if [ ! -e /usr/local/share/applications ]; then
+  sudo ln -s "$user_apps" /usr/local/share/applications
+elif [ "$(readlink /usr/local/share/applications)" != "$user_apps" ]; then
+  echo "skip  /usr/local/share/applications already exists" >&2
+  failed=1
+fi
 
 exit $failed
 {{ end -}}

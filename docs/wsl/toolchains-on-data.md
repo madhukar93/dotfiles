@@ -100,7 +100,7 @@ with `sudo` and one list:
 
 | Folder | On /data | Size on 2026-10-23 |
 |---|---|---|
-| `/var/lib/flatpak` (system-wide flatpak apps and runtimes) | `/data/flatpak` | 8.2 GB |
+| `/var/lib/flatpak/{app,runtime,repo,appstream,.removed}` (system-wide flatpak apps and runtimes) | `/data/flatpak/...` | 8.2 GB |
 | `/var/cache/pacman/pkg` (packages pacman downloaded) | `/data/pacman-pkg` | 1.8 GB |
 
 It moves an existing folder, or links an existing `/data` folder (the dual-boot case). When both exist, the
@@ -109,12 +109,29 @@ aside as `/var/lib/flatpak.before-data`, and two flatpak folders that both hold 
 
 | Option for flatpak | Verdict |
 |---|---|
-| Symlink `/var/lib/flatpak` | Chosen. `flatpak install` and `flatpak run` work unchanged; checked by running VSCodium and RustRover and a catalog refresh after the move. |
+| Symlink `/var/lib/flatpak` | Used until 2026-10-24. `flatpak install` and `flatpak run` work unchanged, but flatpak apps dropped out of the Windows Start menu (below). |
+| Symlink each folder inside `/var/lib/flatpak` except `exports` | Chosen. `exports` (the menu entries, 212 KB) stays on the system disk. |
 | A second installation (`/etc/flatpak/installations.d/*.conf`) | Works, but every install needs `--installation=<name>`. |
 | Bind mount | Not needed: flatpak follows the symlink. |
 
-Undo for one folder: `sudo rm /var/lib/flatpak && sudo cp -a /data/flatpak /var/lib/flatpak` (the same for
-`/var/cache/pacman/pkg` and `/data/pacman-pkg`), then delete the `/data` copy once the original path works.
+### Flatpak apps in the Windows Start menu
+
+WSLg builds the Start menu from a fixed list of folders, including `/var/lib/flatpak/exports/share/applications`
+and `/usr/local/share/applications`. It checks each folder once, when WSL starts, and skips a folder that does
+not exist until the next start (`/mnt/wslg/weston.log`: "doesn't exist, skipping"). On 2026-10-24 it checked at
+01:27:55.796 and the disk was attached at 01:27:58, so with all of `/var/lib/flatpak` on `/data`, no flatpak
+app was in the Start menu.
+
+- `exports` stays on the system disk, so WSLg finds and watches the folder. Its entries are links into `app/`, so
+  at WSL start they point into the unattached disk.
+- `flatpak-start-menu.service` is `WantedBy=mnt-wsl-data.mount`: when the disk is mounted, it deletes and
+  re-creates each entry, so WSLg sees new files and reads them. Not yet confirmed across a restart.
+- `/usr/local/share/applications` links to `~/.local/share/applications`, where Gear Lever puts AppImage menu
+  entries. WSLg does not read the home folder.
+
+Undo for pacman's cache: `sudo rm /var/cache/pacman/pkg && sudo cp -a /data/pacman-pkg /var/cache/pacman/pkg`,
+then delete the `/data` copy once the original path works. For flatpak, do the same for each link inside
+`/var/lib/flatpak`, then `sudo systemctl disable flatpak-start-menu.service` and delete its unit file.
 
 pacman was checked after the move with `sudo pacman -Sw pacman-contrib` (download only): the package landed in
 `/data/pacman-pkg`.
