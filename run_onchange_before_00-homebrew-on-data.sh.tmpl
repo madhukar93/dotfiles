@@ -2,9 +2,9 @@
 #!/bin/bash
 # Keep Homebrew on the /data disk. Its ready-built packages only work at
 # /home/linuxbrew/.linuxbrew, and brew resolves symlinks, so /data/linuxbrew is
-# bind-mounted at that exact path instead. A systemd path unit starts the mount as
-# soon as /data appears, because a Windows task attaches the disk some time after
-# WSL starts. Sorts before 00-install-homebrew, so a second Linux install that shares
+# bind-mounted at that exact path instead. The mount is wanted by the /data disk's own
+# mount unit, so it starts as soon as the disk is mounted: a Windows task attaches the
+# disk some time after WSL starts. Sorts before 00-install-homebrew, so a second Linux install that shares
 # the disk (dual boot) uses this Homebrew instead of installing another.
 # Uses sudo. Re-runs only when this script changes.
 set -euo pipefail
@@ -19,14 +19,18 @@ if [ -L /data ] && [ ! -d /data/ ]; then
 fi
 [ -d /data/ ] || exit 0
 
-# Path units do not follow symlinks, so watch the real folder (/mnt/wsl/data/... on WSL).
 real=$(readlink -f "$data")
+# The disk's mount unit (mnt-wsl-data.mount on WSL). A path unit watching $real never
+# fired: inotify does not report a filesystem being mounted over a folder.
+disk=$(systemd-escape -p --suffix=mount "$(findmnt -no TARGET --target "$real")")
 
-# No default dependencies: the path unit starts this mount after boot, and a mount that
-# is part of local-fs.target cannot wait for a path unit (systemd reports a cycle).
+# No default dependencies: they make the mount part of local-fs.target, and the disk
+# is only attached after boot.
 mount_unit="[Unit]
 Description=Homebrew from the /data disk
 DefaultDependencies=no
+BindsTo=$disk
+After=$disk
 Conflicts=umount.target
 Before=umount.target
 
@@ -34,21 +38,15 @@ Before=umount.target
 What=$real
 Where=$prefix
 Type=none
-Options=bind"
-
-path_unit="[Unit]
-Description=Mount Homebrew as soon as the /data disk is attached
-
-[Path]
-PathExists=$real
-Unit=$unit.mount
+Options=bind
 
 [Install]
-WantedBy=multi-user.target"
+WantedBy=$disk"
 
 if mountpoint -q "$prefix" &&
   [ "$(cat "/etc/systemd/system/$unit.mount" 2>/dev/null)" = "$mount_unit" ] &&
-  [ "$(cat "/etc/systemd/system/$unit.path" 2>/dev/null)" = "$path_unit" ]; then
+  [ ! -e "/etc/systemd/system/$unit.path" ] &&
+  systemctl is-enabled -q "$unit.mount"; then
   exit 0
 fi
 
@@ -73,11 +71,14 @@ elif [ ! -e "$data" ]; then
 fi
 sudo mkdir -p "$prefix"
 
+# Earlier versions of this script used a path unit instead.
+if [ -e "/etc/systemd/system/$unit.path" ]; then
+  sudo systemctl disable --now "$unit.path"
+  sudo rm "/etc/systemd/system/$unit.path"
+fi
 printf '%s\n' "$mount_unit" | sudo tee "/etc/systemd/system/$unit.mount" >/dev/null
-printf '%s\n' "$path_unit" | sudo tee "/etc/systemd/system/$unit.path" >/dev/null
 sudo systemctl daemon-reload
-sudo systemctl start "$unit.mount"
-sudo systemctl enable --now "$unit.path"
+sudo systemctl enable --now "$unit.mount"
 mountpoint -q "$prefix"
 echo "mount $data at $prefix"
 

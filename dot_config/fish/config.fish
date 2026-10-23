@@ -16,6 +16,15 @@ end
 
 fish_user_key_bindings
 
+# WSL: a Windows task attaches the /data disk, and with it Homebrew, a few seconds after
+# WSL starts. The first terminal opens sooner, so wait up to 15 seconds for it.
+if test -L /data; and not test -x /home/linuxbrew/.linuxbrew/bin/brew
+    for i in (seq 30)
+        test -x /home/linuxbrew/.linuxbrew/bin/brew; and break
+        sleep 0.5
+    end
+end
+
 # Homebrew: Apple Silicon, Intel macOS, or Linux (Linuxbrew)
 for __brew in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxbrew/bin/brew
     if test -x $__brew
