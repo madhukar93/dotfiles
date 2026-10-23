@@ -1,0 +1,22 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/sh
+# Install sudo-mcp, an MCP server that lets Claude Code run sudo commands: each one
+# opens a password dialog, so the password never reaches the model or the transcript.
+# Re-runs only when this script changes.
+set -eu
+
+if ! command -v cargo >/dev/null 2>&1 || ! command -v claude >/dev/null 2>&1; then
+  echo "cargo or claude not found on PATH, skipping sudo-mcp." >&2
+  exit 0
+fi
+
+cargo install --locked --force --git https://github.com/madhukar93/sudo-mcp
+# A WSL crash once left a freshly built sudo-mcp as all zeros; write it to disk now.
+sync
+
+claude mcp get sudo-mcp >/dev/null 2>&1 ||
+  claude mcp add sudo-mcp --scope user -- "$HOME/.cargo/bin/sudo-mcp"
+
+command -v zenity >/dev/null 2>&1 ||
+  echo "sudo-mcp needs a password dialog on Linux: sudo pacman -S zenity" >&2
+{{ end -}}
