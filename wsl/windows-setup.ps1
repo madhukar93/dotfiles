@@ -43,7 +43,7 @@ $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
 Register-ScheduledTask -TaskName $task -Action $action -Trigger $trigger -RunLevel Highest -Force | Out-Null
 Write-Host "done  task $task runs $mountScript at logon"
 
-# 2. WSL memory limit
+# 2. WSL memory limit and default disk size
 Copy-Item (Join-Path $PSScriptRoot 'wslconfig') $wslconfig -Force
 Write-Host "done  $wslconfig (takes effect after 'wsl --shutdown')"
 

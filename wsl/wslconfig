@@ -1,3 +1,5 @@
 [wsl2]
 # 48 of 64 GB; leaves about 15 GB for Windows. WSL defaults to half of RAM.
 memory=48GB
+# Largest size of the disk file a new distro gets on C: (default 1 TB). Toolchains and code live on /data.
+defaultVhdSize=40GB
