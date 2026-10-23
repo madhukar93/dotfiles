@@ -103,9 +103,18 @@ committed.
   the same directory; the directory is intentionally **not** `exact_`, so chezmoi leaves fisher's files alone.
 - **`dot_local/bin/executable_data-links`, `run_onchange_after_20-data-links.sh.tmpl`** — on a machine with a
   `/data` disk (the CachyOS WSL PC), toolchain and package folders (mise, rustup, cargo, go, gems, uv, pipx,
-  npm cache) and `~/code` live on `/data` with a symlink at each usual path. The script holds the one list of folders and has
+  npm cache), `~/code` and flatpak app data (`~/.var`) live on `/data` with a symlink at each usual path. The script holds the one list of folders and has
   `install`, `uninstall` and `status`; the run script calls `install` on apply and skips machines without
   `/data`. `dot_config/mise/conf.d/paths.toml` puts `~/go/bin` and `~/.gem/bin` on PATH via mise.
+- **`run_onchange_before_00-homebrew-on-data.sh.tmpl`** — Linux only. Moves Homebrew to `/data/linuxbrew` and
+  bind-mounts it at `/home/linuxbrew/.linuxbrew` through two systemd units (a symlink would break Homebrew's
+  ready-built packages). Sorts before the Homebrew installer so a dual-boot install reuses it.
+- **`run_onchange_after_25-system-data-links.sh.tmpl`** — Linux only. `data-links` for root's folders, with
+  `sudo`: `/var/lib/flatpak` (flatpak's system-wide apps) and `/var/cache/pacman/pkg` (pacman's downloads) link
+  to `/data`, so a dual-boot install on the same disk shares them. Details in `docs/wsl/toolchains-on-data.md`.
+- **`run_onchange_after_50-install-sudo-mcp.sh.tmpl`** — Linux only. Builds sudo-mcp (an MCP server that runs
+  `sudo` behind a password dialog) from `github.com/madhukar93/sudo-mcp` and registers it with
+  `claude mcp add --scope user`. Needs `zenity` for the dialog.
 - **`dot_config/niri/`, `dot_config/noctalia/config.toml`, `dot_local/bin/executable_niri-wsl`** — the niri
   desktop with the Noctalia shell, from CachyOS's `cachyos-niri-noctalia` package (`/etc/skel`), with the terminal
   shortcut changed to kitty. Linux only. In WSL, `niri-wsl` runs niri as a window inside WSLg on the GPU (Mesa

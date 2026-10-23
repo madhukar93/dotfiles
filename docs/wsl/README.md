@@ -7,7 +7,7 @@ dropped, and how each problem was diagnosed. The install and uninstall steps are
 |---|---|
 | [troubleshooting-method.md](troubleshooting-method.md) | Something does not work and you do not know where to start |
 | [data-disk.md](data-disk.md) | `/data` is missing, or you want to know why it is mounted the way it is |
-| [toolchains-on-data.md](toolchains-on-data.md) | Moving package folders, mise, `data-links`, or "why not move all of `~`" |
+| [toolchains-on-data.md](toolchains-on-data.md) | Moving package folders, mise, `data-links`, flatpak on `/data`, or "why not move all of `~`" |
 | [gui-on-wsl.md](gui-on-wsl.md) | Hyprland, niri, remote desktop, or how to run Linux GUI apps |
 | [systemd-user-session.md](systemd-user-session.md) | `systemctl --user` fails, or `XDG_RUNTIME_DIR` looks wrong |
 | [fonts-and-icons.md](fonts-and-icons.md) | Icons show as `�` or empty boxes in Windows Terminal |

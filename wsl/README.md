@@ -20,7 +20,8 @@ Windows side, and the steps to install or remove them. Everything under `$HOME` 
    create one GPT partition of type Linux named `data` (`sfdisk`), and `sudo mkfs.ext4 -L data -O ^orphan_file <partition>`.
    Then `wsl --unmount \\.\PHYSICALDRIVE<n>`.
 4. `wsl --shutdown`, reopen, then in WSL: `sudo ln -s /mnt/wsl/data /data`, `sudo chown $USER: /mnt/wsl/data`,
-   and `chezmoi apply` (runs `data-links install`).
+   and `chezmoi apply` (runs `data-links install`; with `sudo`, bind-mounts Homebrew from `/data/linuxbrew` and
+   links flatpak's apps and pacman's download cache to `/data`; installs sudo-mcp). sudo-mcp needs `sudo pacman -S zenity` for its password dialog.
 
 ## Uninstall
 

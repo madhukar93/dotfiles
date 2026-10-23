@@ -50,6 +50,12 @@ community gist), judged against this setup, and not tried.
    (`cmd=$(sed -n 's/^command *= *//p' /etc/wsl.conf); bash -c "$cmd"`), and compare `LastRunTime` of the task
    with the time WSL started.
 4. **Device letters change** (`sdf1`, then `sde1`). Nothing depends on them; the script and the mount name do.
+5. **A freshly built program was all zeros.** On 2026-10-22, `cargo install` of sudo-mcp left
+   `~/.cargo/bin/sudo-mcp` empty and the build output on `/data` full of zero bytes; starting it failed with
+   `ENOEXEC`. At the next boot the WSL system disk reported `10 orphan inodes deleted`, so WSL had stopped
+   uncleanly (cause inferred, not confirmed). A scan of all 111,567 files changed on `/data` since 2026-10-20
+   found no other zero-filled file. Lesson: run `sync` after large writes and before deleting an original,
+   and stop WSL with `wsl --shutdown`.
 
 ## Troubleshooting `/data`
 
@@ -60,6 +66,17 @@ community gist), judged against this setup, and not tried.
 | The task ran but mounting failed | Run `powershell.exe -File C:\Users\<you>\mount-data-disk.ps1` in an admin shell and read the error | The script stops if it finds zero or several disks matching the model |
 | `Can't find ext4 filesystem` in `dmesg` | `lsblk -o NAME,FSTYPE,LABEL` | The partition has no filesystem; format it |
 | Mount works but you cannot write | `ls -ld /mnt/wsl/data` | `sudo chown $USER: /mnt/wsl/data` |
+
+## Before booting Linux natively from this disk (dual boot)
+
+Turn off Windows hibernation and Fast Startup first: `powercfg /h off` in an admin PowerShell. Fast Startup
+is a partial hibernation and `powercfg /h off` disables both. If Windows hibernates while WSL has this disk
+mounted, the ext4 filesystem stays mounted inside the saved WSL state. Mounting it from native Linux and then
+resuming Windows lets two systems write to one filesystem, which corrupts it. With hibernation off, a reboot
+always stops WSL and detaches the disk. Check with `powercfg /a`: "Hibernation has not been enabled".
+
+Both installs also need the same user ID (`id -u`, 1000 here), or every file on `/data` belongs to another
+user.
 
 ## Safety rules used
 

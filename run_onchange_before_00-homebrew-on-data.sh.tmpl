@@ -1,0 +1,98 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+# Keep Homebrew on the /data disk. Its ready-built packages only work at
+# /home/linuxbrew/.linuxbrew, and brew resolves symlinks, so /data/linuxbrew is
+# bind-mounted at that exact path instead. A systemd path unit starts the mount as
+# soon as /data appears, because a Windows task attaches the disk some time after
+# WSL starts. Sorts before 00-install-homebrew, so a second Linux install that shares
+# the disk (dual boot) uses this Homebrew instead of installing another.
+# Uses sudo. Re-runs only when this script changes.
+set -euo pipefail
+
+prefix=/home/linuxbrew/.linuxbrew
+data=/data/linuxbrew
+unit=home-linuxbrew-.linuxbrew # systemd-escape -p /home/linuxbrew/.linuxbrew
+
+if [ -L /data ] && [ ! -d /data/ ]; then
+  echo "/data is not mounted; mount it and run 'chezmoi apply' again." >&2
+  exit 1
+fi
+[ -d /data/ ] || exit 0
+
+# Path units do not follow symlinks, so watch the real folder (/mnt/wsl/data/... on WSL).
+real=$(readlink -f "$data")
+
+# No default dependencies: the path unit starts this mount after boot, and a mount that
+# is part of local-fs.target cannot wait for a path unit (systemd reports a cycle).
+mount_unit="[Unit]
+Description=Homebrew from the /data disk
+DefaultDependencies=no
+Conflicts=umount.target
+Before=umount.target
+
+[Mount]
+What=$real
+Where=$prefix
+Type=none
+Options=bind"
+
+path_unit="[Unit]
+Description=Mount Homebrew as soon as the /data disk is attached
+
+[Path]
+PathExists=$real
+Unit=$unit.mount
+
+[Install]
+WantedBy=multi-user.target"
+
+if mountpoint -q "$prefix" &&
+  [ "$(cat "/etc/systemd/system/$unit.mount" 2>/dev/null)" = "$mount_unit" ] &&
+  [ "$(cat "/etc/systemd/system/$unit.path" 2>/dev/null)" = "$path_unit" ]; then
+  exit 0
+fi
+
+# Lists type, mode, size, link count, path and link target, so two trees can be compared.
+# Folder sizes are left out: they depend on how the filesystem stored the entries.
+tree() { (cd "$1" && sudo find . \( -type d -printf 'd %m %p\n' \) -o \( ! -type d -printf '%y %m %s %n %p %l\n' \) | sort); }
+
+copied=0
+if mountpoint -q "$prefix"; then
+  :
+elif [ -e "$prefix/bin/brew" ] && [ -e "$data" ]; then
+  echo "homebrew: both $prefix and $data hold Homebrew; merge them by hand" >&2
+  exit 1
+elif [ -e "$prefix/bin/brew" ]; then
+  sudo cp -a "$prefix" "$data"
+  sync
+  copied=1
+elif [ ! -e "$data" ]; then
+  # No Homebrew yet: the installer that runs next puts it straight onto /data.
+  sudo mkdir -p "$data"
+  sudo chown "${SUDO_USER:-$(id -un)}:" "$data"
+fi
+sudo mkdir -p "$prefix"
+
+printf '%s\n' "$mount_unit" | sudo tee "/etc/systemd/system/$unit.mount" >/dev/null
+printf '%s\n' "$path_unit" | sudo tee "/etc/systemd/system/$unit.path" >/dev/null
+sudo systemctl daemon-reload
+sudo systemctl start "$unit.mount"
+sudo systemctl enable --now "$unit.path"
+mountpoint -q "$prefix"
+echo "mount $data at $prefix"
+
+[ $copied -eq 1 ] || exit 0
+
+# The original is now hidden under the mount. A second, non-recursive view of its
+# parent shows it again; delete it only if it matches the copy exactly.
+view=$(mktemp -d)
+sudo mount --bind "${prefix%/*}" "$view"
+if [ "$(tree "$view/${prefix##*/}")" = "$(tree "$prefix")" ]; then
+  sudo find "$view/${prefix##*/}" -xdev -mindepth 1 -delete
+  echo "removed the original under $prefix"
+else
+  echo "homebrew: the copy on $data differs from the original; the original is kept under the mount" >&2
+fi
+sudo umount "$view"
+rmdir "$view"
+{{ end -}}

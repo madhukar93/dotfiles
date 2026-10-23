@@ -1,0 +1,55 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/bash
+# Keep large system folders on the /data disk, with a symlink at each usual path so
+# every tool keeps finding them. A second Linux install that shares the disk (dual
+# boot) links the same folders. Uses sudo, because these folders belong to root.
+# Re-runs only when this script changes.
+set -euo pipefail
+
+if [ -L /data ] && [ ! -d /data/ ]; then
+  echo "/data is not mounted; mount it and run 'chezmoi apply' again." >&2
+  exit 1
+fi
+[ -d /data/ ] || exit 0
+
+failed=0
+
+# Copy, flush to disk, then delete, so a crash never leaves only an unwritten copy.
+move() { sudo cp -a "$1" "$2" && sync && sudo rm -rf "$1"; }
+
+# link <system folder> <folder on /data> [subfolders that hold a real install]
+# With no subfolders the folder is a cache, and two copies are merged.
+link() {
+  local src=$1 data=$2
+  shift 2
+  if [ -L "$src" ]; then
+    [ "$(readlink "$src")" = "$data" ] && return 0
+    echo "skip  $src: links somewhere else ($(readlink "$src"))" >&2
+    failed=1
+    return 0
+  fi
+  if [ -e "$src" ] && [ -e "$data" ]; then
+    if [ $# -eq 0 ]; then
+      sudo cp -an "$src/." "$data/" && sync && sudo rm -rf "$src"
+    elif [ -n "$(cd "$src" && find "$@" -mindepth 1 -maxdepth 1 2>/dev/null | head -n1)" ]; then
+      echo "skip  $src: it and $data both hold an install; merge them by hand" >&2
+      failed=1
+      return 0
+    else
+      # A fresh install with nothing in it yet: keep it aside, use the shared one.
+      sudo mv "$src" "$src.before-data"
+    fi
+  elif [ -e "$src" ]; then
+    move "$src" "$data"
+  else
+    sudo mkdir -p "$data"
+  fi
+  sudo ln -s "$data" "$src"
+  echo "link  $src -> $data"
+}
+
+link /var/lib/flatpak /data/flatpak app runtime
+link /var/cache/pacman/pkg /data/pacman-pkg
+
+exit $failed
+{{ end -}}

@@ -24,10 +24,12 @@ LINKS=(
   .npm:npm-cache
   .cache/uv:uv-cache
   code:code
+  .var:var
+  .cache/Homebrew:homebrew-cache
 )
 
-# Copy then delete, so an interrupted move leaves the original in place.
-move() { cp -a "$1" "$2" && rm -rf "$1"; }
+# Copy, flush to disk, then delete, so an interrupted move or a crash leaves the original in place.
+move() { cp -a "$1" "$2" && sync && rm -rf "$1"; }
 
 need_data() {
   [ -d "$DATA/" ] || { echo "data-links: $DATA is missing or not mounted" >&2; exit 1; }

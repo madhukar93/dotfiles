@@ -25,7 +25,13 @@ system Python from CachyOS. `brew missing` reports no broken dependencies after 
 `run_onchange_after_20-data-links.sh.tmpl` runs `install` on `chezmoi apply` when the list changes, skips
 machines without `/data`, and fails (so it retries) when `/data` exists but is not mounted.
 
-Folders: mise data and cache, rustup, cargo, go, gem, uv, pipx, npm cache, uv cache, and `~/code`.
+Folders: mise data and cache, rustup, cargo, go, gem, uv, pipx, npm cache, uv cache, `~/code`, flatpak's
+per-app data (`~/.var`, 4.1 GB on 2026-10-23, mostly VSCodium), and Homebrew's download cache
+(`~/.cache/Homebrew`, 0.9 GB). Close flatpak apps before `chezmoi apply`
+moves `~/.var`.
+
+`move` runs `sync` between the copy and the delete. Without it, a crash right after a move can leave the
+original deleted and the copy never written to disk (see data-disk.md, failure 5).
 
 `dot_config/mise/conf.d/paths.toml` puts `~/go/bin` and `~/.gem/bin` on `PATH`, because nothing else did.
 
@@ -49,11 +55,65 @@ Folders: mise data and cache, rustup, cargo, go, gem, uv, pipx, npm cache, uv ca
 
 Common practice: a small home on the system disk, large rebuildable folders on the data disk.
 
-## Homebrew stays where it is
+## Homebrew: `/data/linuxbrew` bind-mounted at `/home/linuxbrew/.linuxbrew`
 
-Homebrew (about 3 GB at `/home/linuxbrew/.linuxbrew`) was not moved. Its ready-built packages only work at
-that exact path; a symlink would make Homebrew build from source. Moving it would need a bind mount set up at
-boot. Not worth it.
+Homebrew (3.1 GB on 2026-10-23) lives in `/data/linuxbrew`. A symlink does not work: `brew` resolves its own
+path with `pwd -P`, so it would see the prefix as `/mnt/wsl/data/linuxbrew`, and its ready-built packages only
+work at `/home/linuxbrew/.linuxbrew`. A bind mount shows the `/data` folder at that exact path, so
+`brew --prefix` still prints `/home/linuxbrew/.linuxbrew`.
+
+`run_onchange_before_00-homebrew-on-data.sh.tmpl` sets it up with `sudo`:
+
+- `/etc/systemd/system/home-linuxbrew-.linuxbrew.mount` does the bind mount. The name is fixed by systemd: it
+  is the mount path run through `systemd-escape -p`.
+- `/etc/systemd/system/home-linuxbrew-.linuxbrew.path` watches `/mnt/wsl/data/linuxbrew` (path units do not
+  follow the `/data` symlink) and starts the mount as soon as the Windows task attaches the disk.
+- The mount unit has `DefaultDependencies=no`. With the defaults it is part of `local-fs.target`, which boots
+  before path units start, and `systemd-analyze verify` reports an ordering cycle.
+- It sorts before `run_once_before_00-install-homebrew.sh.tmpl`, so a dual-boot install mounts the shared
+  Homebrew instead of installing a second one. The installer also checks for `/home/linuxbrew/.linuxbrew/bin/brew`
+  at run time, because templates are rendered before any script runs.
+- After copying, it deletes the original only if it matches the copy. The original is hidden under the mount,
+  so the script reaches it through a second, non-recursive bind mount of `/home/linuxbrew`.
+
+The first move (2026-10-23) was done by hand in the same steps, because Claude Code's auto mode would not run a
+script file as root. Copy, `sync`, metadata compare of all 108,719 entries, then `diff -rq` of every file's
+content, then delete. fish, tmux and chezmoi from Homebrew kept running throughout, because the mount went on
+top of the original before the original was deleted.
+
+Undo: `sudo systemctl disable --now home-linuxbrew-.linuxbrew.path`, then
+`sudo cp -a /data/linuxbrew /tmp/linuxbrew` (anywhere off the mount), `sudo systemctl stop home-linuxbrew-.linuxbrew.mount`
+(close every shell and tmux session that runs Homebrew's fish or tmux first, or the unmount fails as busy),
+copy `/tmp/linuxbrew/.` into the now-empty `/home/linuxbrew/.linuxbrew`, and delete the two unit files.
+
+## System folders: flatpak's apps and pacman's download cache
+
+`run_onchange_after_25-system-data-links.sh.tmpl` does for root's folders what `data-links` does for `$HOME`,
+with `sudo` and one list:
+
+| Folder | On /data | Size on 2026-10-23 |
+|---|---|---|
+| `/var/lib/flatpak` (system-wide flatpak apps and runtimes) | `/data/flatpak` | 8.2 GB |
+| `/var/cache/pacman/pkg` (packages pacman downloaded) | `/data/pacman-pkg` | 1.8 GB |
+
+It moves an existing folder, or links an existing `/data` folder (the dual-boot case). When both exist, the
+pacman cache is merged (package files never change, so `cp -n` is safe), a flatpak folder with no apps is set
+aside as `/var/lib/flatpak.before-data`, and two flatpak folders that both hold apps are left for a manual merge.
+
+| Option for flatpak | Verdict |
+|---|---|
+| Symlink `/var/lib/flatpak` | Chosen. `flatpak install` and `flatpak run` work unchanged; checked by running VSCodium and RustRover and a catalog refresh after the move. |
+| A second installation (`/etc/flatpak/installations.d/*.conf`) | Works, but every install needs `--installation=<name>`. |
+| Bind mount | Not needed: flatpak follows the symlink. |
+
+Undo for one folder: `sudo rm /var/lib/flatpak && sudo cp -a /data/flatpak /var/lib/flatpak` (the same for
+`/var/cache/pacman/pkg` and `/data/pacman-pkg`), then delete the `/data` copy once the original path works.
+
+pacman was checked after the move with `sudo pacman -Sw pacman-contrib` (download only): the package landed in
+`/data/pacman-pkg`.
+
+Programs pacman installs (`/usr`, `/opt`, 5.5 GB) stay on the system disk. They are the operating system,
+needed at boot before `/data` is attached, and a dual-boot install has its own.
 
 ## Where each tool installs new packages (checked, then fixed)
 
@@ -76,4 +136,8 @@ in a fresh fish. Do the same after adding a new language.
 | `node: command not found` right after a restart | `/data` is not mounted, so the symlinked mise folder is a dead link | Mount `/data` (see data-disk.md) |
 | `data-links install` says "both it and /data/x exist" | A folder was recreated at the old path | Merge by hand, then run again |
 | A tool is installed but not found | Its bin folder is not on `PATH` | Add it in `mise/conf.d/paths.toml` |
+| A flatpak app is "not installed" right after a restart | `/data` is not mounted yet | Mount `/data` (see data-disk.md) |
+| `brew`, Homebrew's fish or tmux missing after a restart | `/data` is not mounted, or the bind mount did not start | `findmnt /home/linuxbrew/.linuxbrew`; `systemctl status home-linuxbrew-.linuxbrew.path home-linuxbrew-.linuxbrew.mount` |
+| pacman says it cannot write to its cache | `/var/cache/pacman/pkg` points to an unmounted `/data` | Mount `/data` |
+| `flatpak install` or `update` says "not allowed for user" | System-wide changes go through polkit, and WSL runs no polkit password agent. Not caused by `/data`. | `sudo flatpak ...` |
 | `mise doctor` complains | Run it and read the first warning | Usually a missing `mise activate` in a shell config |
