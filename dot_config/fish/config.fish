@@ -34,9 +34,10 @@ for __brew in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxb
 end
 set -e __brew
 
-# Start or attach to tmux in interactive shells only, and never inside tmux itself.
+# Start or attach to tmux in interactive shells only, never on macOS (herdr runs there
+# directly in the terminal), inside tmux, or in a herdr pane.
 # Must come after Homebrew setup: tmux is installed by Homebrew.
-if status is-interactive; and not set -q TMUX; and command -q tmux; and test "$TERM_PROGRAM" != vscode
+if status is-interactive; and test (uname) != Darwin; and not set -q TMUX; and not set -q HERDR_ENV; and command -q tmux; and test "$TERM_PROGRAM" != vscode
     exec tmux new-session -A -s main
 end
 
