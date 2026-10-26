@@ -389,6 +389,7 @@ set -g @plugin 'fcsonline/tmux-thumbs'
 set -g @plugin 'schasse/tmux-jump'
 set -g @plugin 'tmux-plugins/tmux-logging'
 set -g @plugin 'laktak/extrakto'
+set -g @plugin 'hiroppy/tmux-agent-sidebar'
 
 # -- catppuccin theme ----------------------------------------------------------
 # catppuccin draws the whole status line; oh-my-tmux's own theme is turned off
