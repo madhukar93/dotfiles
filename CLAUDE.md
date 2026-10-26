@@ -141,3 +141,17 @@ committed.
   one, check whether the others need the same change to keep the "seamless navigation" behavior working.
 - After hand-editing a live file in `$HOME` (as opposed to editing here), remember to `chezmoi add` it back
   into this source tree, or the change will be lost / overwritten on the next `chezmoi apply`.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues in `madhukar93/dotfiles`, each one also added to the private "dotfiles" board (board 1). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
