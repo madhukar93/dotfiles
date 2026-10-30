@@ -2,9 +2,9 @@
 #!/bin/bash
 # Keep Homebrew on the /data disk. Its ready-built packages only work at
 # /home/linuxbrew/.linuxbrew, and brew resolves symlinks, so /data/linuxbrew is
-# bind-mounted at that exact path instead. The mount is wanted by the /data disk's own
-# mount unit, so it starts as soon as the disk is mounted: a Windows task attaches the
-# disk some time after WSL starts. Sorts before 00-install-homebrew, so a second Linux install that shares
+# bind-mounted at that exact path instead. A service started at every boot waits for
+# the disk and then starts the mount: a Windows task attaches the disk some time after
+# WSL starts. Sorts before 00-install-homebrew, so a second Linux install that shares
 # the disk (dual boot) uses this Homebrew instead of installing another.
 # Uses sudo. Re-runs only when this script changes.
 set -euo pipefail
@@ -20,9 +20,9 @@ fi
 [ -d /data/ ] || exit 0
 
 real=$(readlink -f "$data")
-# The disk's mount unit (mnt-wsl-data.mount on WSL). A path unit watching $real never
-# fired: inotify does not report a filesystem being mounted over a folder.
-disk=$(systemd-escape -p --suffix=mount "$(findmnt -no TARGET --target "$real")")
+disk_dir=$(findmnt -no TARGET --target "$real")
+# The disk's mount unit (mnt-wsl-data.mount on WSL).
+disk=$(systemd-escape -p --suffix=mount "$disk_dir")
 
 # No default dependencies: they make the mount part of local-fs.target, and the disk
 # is only attached after boot.
@@ -38,15 +38,27 @@ Before=umount.target
 What=$real
 Where=$prefix
 Type=none
-Options=bind
+Options=bind"
+
+# Neither trigger tied to the disk works: a path unit never fired (inotify does not report
+# a filesystem mounted over a folder), and WantedBy=$disk fired only on some boots, because
+# WSL attaches the disk outside systemd. So wait for the disk here.
+wait_unit="[Unit]
+Description=Mount Homebrew once the /data disk is attached
+
+[Service]
+Type=simple
+ExecStart=/bin/sh -c 'for i in \$\$(seq 120); do mountpoint -q $disk_dir && break; sleep 1; done; exec systemctl start $unit.mount'
 
 [Install]
-WantedBy=$disk"
+WantedBy=multi-user.target"
 
 if mountpoint -q "$prefix" &&
   [ "$(cat "/etc/systemd/system/$unit.mount" 2>/dev/null)" = "$mount_unit" ] &&
+  [ "$(cat /etc/systemd/system/homebrew-mount.service 2>/dev/null)" = "$wait_unit" ] &&
   [ ! -e "/etc/systemd/system/$unit.path" ] &&
-  systemctl is-enabled -q "$unit.mount"; then
+  [ ! -e "/etc/systemd/system/$disk.wants/$unit.mount" ] &&
+  systemctl is-enabled -q homebrew-mount.service; then
   exit 0
 fi
 
@@ -76,9 +88,13 @@ if [ -e "/etc/systemd/system/$unit.path" ]; then
   sudo systemctl disable --now "$unit.path"
   sudo rm "/etc/systemd/system/$unit.path"
 fi
+# Earlier versions had the disk's mount unit want the mount.
+sudo rm -f "/etc/systemd/system/$disk.wants/$unit.mount"
 printf '%s\n' "$mount_unit" | sudo tee "/etc/systemd/system/$unit.mount" >/dev/null
+printf '%s\n' "$wait_unit" | sudo tee /etc/systemd/system/homebrew-mount.service >/dev/null
 sudo systemctl daemon-reload
-sudo systemctl enable --now "$unit.mount"
+sudo systemctl enable homebrew-mount.service
+sudo systemctl start "$unit.mount"
 mountpoint -q "$prefix"
 echo "mount $data at $prefix"
 

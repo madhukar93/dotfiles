@@ -66,9 +66,12 @@ work at `/home/linuxbrew/.linuxbrew`. A bind mount shows the `/data` folder at t
 
 - `/etc/systemd/system/home-linuxbrew-.linuxbrew.mount` does the bind mount. The name is fixed by systemd: it
   is the mount path run through `systemd-escape -p`.
-- The mount unit is `WantedBy=` and `BindsTo=` the disk's own mount unit, `mnt-wsl-data.mount`. When the
-  Windows task mounts the disk, systemd starts the units that want it, so Homebrew is mounted within a second;
-  when the disk is unmounted, Homebrew is unmounted with it.
+- `/etc/systemd/system/homebrew-mount.service` starts at every boot (`WantedBy=multi-user.target`), waits up to
+  120 seconds for the disk to be mounted, checking each second, then starts the mount. The mount unit is
+  `BindsTo=` the disk's own mount unit, `mnt-wsl-data.mount`, so it is unmounted with the disk.
+- From 2026-10-24 to 2026-10-30 the mount unit was `WantedBy=mnt-wsl-data.mount` instead. The same trigger
+  started the flatpak Start-menu refresh in only 1 of 4 boots (below): WSL attaches the disk outside systemd,
+  and systemd then does not reliably start what the mount unit wants. The script removes that link.
 - Until 2026-10-24 a path unit (`home-linuxbrew-.linuxbrew.path`, watching `/mnt/wsl/data/linuxbrew`) started
   the mount. It never fired after a restart: inotify, which path units use, does not report a filesystem being
   mounted over a folder. The script removes it.
@@ -88,10 +91,11 @@ script file as root. Copy, `sync`, metadata compare of all 108,719 entries, then
 content, then delete. fish, tmux and chezmoi from Homebrew kept running throughout, because the mount went on
 top of the original before the original was deleted.
 
-Undo: `sudo systemctl disable home-linuxbrew-.linuxbrew.mount`, then
+Undo: `sudo systemctl disable homebrew-mount.service`, then
 `sudo cp -a /data/linuxbrew /tmp/linuxbrew` (anywhere off the mount), `sudo systemctl stop home-linuxbrew-.linuxbrew.mount`
 (close every shell and tmux session that runs Homebrew's fish or tmux first, or the unmount fails as busy),
-copy `/tmp/linuxbrew/.` into the now-empty `/home/linuxbrew/.linuxbrew`, and delete the two unit files.
+copy `/tmp/linuxbrew/.` into the now-empty `/home/linuxbrew/.linuxbrew`, and delete the two unit files
+(`home-linuxbrew-.linuxbrew.mount`, `homebrew-mount.service`).
 
 ## System folders: flatpak's apps and pacman's download cache
 
@@ -166,7 +170,7 @@ in a fresh fish. Do the same after adding a new language.
 | `data-links install` says "both it and /data/x exist" | A folder was recreated at the old path | Merge by hand, then run again |
 | A tool is installed but not found | Its bin folder is not on `PATH` | Add it in `mise/conf.d/paths.toml` |
 | A flatpak app is "not installed" right after a restart | `/data` is not mounted yet | Mount `/data` (see data-disk.md) |
-| `brew`, Homebrew's fish or tmux missing after a restart | `/data` is not mounted, or the bind mount did not start | `findmnt /home/linuxbrew/.linuxbrew`; `systemctl status mnt-wsl-data.mount home-linuxbrew-.linuxbrew.mount` |
+| `brew`, Homebrew's fish or tmux missing after a restart | `/data` is not mounted, or the bind mount did not start | `findmnt /home/linuxbrew/.linuxbrew`; `systemctl status homebrew-mount.service home-linuxbrew-.linuxbrew.mount` |
 | pacman says it cannot write to its cache | `/var/cache/pacman/pkg` points to an unmounted `/data` | Mount `/data` |
 | `flatpak install` or `update` says "not allowed for user" | System-wide changes go through polkit, and WSL runs no polkit password agent. Not caused by `/data`. | `sudo flatpak ...` |
 | `mise doctor` complains | Run it and read the first warning | Usually a missing `mise activate` in a shell config |
