@@ -124,8 +124,13 @@ app was in the Start menu.
 
 - `exports` stays on the system disk, so WSLg finds and watches the folder. Its entries are links into `app/`, so
   at WSL start they point into the unattached disk.
-- `flatpak-start-menu.service` is `WantedBy=mnt-wsl-data.mount`: when the disk is mounted, it deletes and
-  re-creates each entry, so WSLg sees new files and reads them. Not yet confirmed across a restart.
+- `flatpak-start-menu.service` starts at every boot (`WantedBy=multi-user.target`), waits up to 120 seconds
+  for the disk to be mounted, then deletes and re-creates each entry, so WSLg sees new files and reads them.
+  Started by hand on 2026-10-30, WSLg logged "app list entry updated" for all four apps within a second.
+- It first used `WantedBy=mnt-wsl-data.mount`. That ran in only 1 of 4 boots from 2026-10-24 to 2026-10-29
+  (`journalctl -b <n> -u flatpak-start-menu.service`). WSL attaches the disk outside systemd, and systemd then
+  does not reliably start what the mount unit wants. On 2026-10-29 WSLg read the entries at 14:29:31.745,
+  the disk was attached at 14:29:32, and the service never ran.
 - `/usr/local/share/applications` links to `~/.local/share/applications`, where Gear Lever puts AppImage menu
   entries. WSLg does not read the home folder.
 

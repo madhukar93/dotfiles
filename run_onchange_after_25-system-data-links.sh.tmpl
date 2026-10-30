@@ -68,18 +68,21 @@ link /var/cache/pacman/pkg /data/pacman-pkg
 
 # At WSL start the menu entries point into the not yet attached disk, so WSLg drops them.
 # Once the disk is mounted, re-create each one: WSLg watches the folder and reads new entries.
-disk=$(systemd-escape -p --suffix=mount "$(findmnt -no TARGET --target /data/)")
+# The service starts at every boot and waits for the disk itself. WSL attaches it outside
+# systemd, so WantedBy= on its mount unit fired in only 1 of 4 boots (2026-10-24 to 10-29).
+disk=$(findmnt -no TARGET --target /data/)
 printf '%s\n' "[Unit]
 Description=Show flatpak apps in the Windows Start menu once the /data disk is attached
-After=$disk
 
 [Service]
-Type=oneshot
-ExecStart=/bin/sh -c 'cd $fp/exports/share/applications && for f in *.desktop; do t=\$\$(readlink \"\$\$f\") && rm \"\$\$f\" && ln -s \"\$\$t\" \"\$\$f\"; done'
+Type=simple
+ExecStart=/bin/sh -c 'for i in \$\$(seq 120); do mountpoint -q $disk && break; sleep 1; done; cd $fp/exports/share/applications && for f in *.desktop; do t=\$\$(readlink \"\$\$f\") && rm \"\$\$f\" && ln -s \"\$\$t\" \"\$\$f\"; done'
 
 [Install]
-WantedBy=$disk" | sudo tee /etc/systemd/system/flatpak-start-menu.service >/dev/null
+WantedBy=multi-user.target" | sudo tee /etc/systemd/system/flatpak-start-menu.service >/dev/null
 sudo systemctl daemon-reload
+# disable first: it removes the old link under the disk's mount unit.
+sudo systemctl disable flatpak-start-menu.service
 sudo systemctl enable flatpak-start-menu.service
 
 # WSLg does not read ~/.local/share/applications, where Gear Lever puts AppImage menu
