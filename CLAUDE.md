@@ -115,6 +115,10 @@ committed.
   them. `exports` and `flatpak-start-menu.service` keep flatpak apps in the Windows Start menu, and
   `/usr/local/share/applications` links to `~/.local/share/applications` so AppImages added with Gear Lever
   appear there too. Details in `docs/wsl/toolchains-on-data.md`.
+- **`pacman-packages.txt`, `run_onchange_after_27-pacman-packages.sh.tmpl`** — Linux with pacman only. The
+  pacman packages every CachyOS machine gets (`sudo pacman -S --needed`); a line with a `# wsl` comment is
+  installed only under WSL. Not deployed. Runs after 25 so pacman's cache is already on `/data`. The mise tool
+  list is `dot_config/mise/config.toml`.
 - **`run_onchange_after_50-install-sudo-mcp.sh.tmpl`** — Linux only. Builds sudo-mcp (an MCP server that runs
   `sudo` behind a password dialog) from `github.com/madhukar93/sudo-mcp` and registers it with
   `claude mcp add --scope user`. Needs `zenity` for the dialog.
@@ -129,6 +133,9 @@ committed.
 - **`wsl/`** — not deployed by chezmoi. The CachyOS WSL machine pieces outside `$HOME`: `/etc/wsl.conf`, the
   Windows `.wslconfig`, the `/data` disk mount script and logon task, and the Nerd Font + Windows Terminal font,
   installed or removed by `wsl/windows-setup.ps1`. `wsl/README.md` has the from-scratch steps.
+- **`dot_claude/modify_settings.json`** — builds `~/.claude/settings.json` from `.chezmoitemplates/claude-settings.json`
+  and keeps the live file's `autoMode` block (per machine, written by `/auto-mode-setup`, names local paths, so it
+  never enters this public repo). `chezmoi add` does not work on this file: edit `.chezmoitemplates/claude-settings.json`.
 - **`dot_claude/skills/aws-login/SKILL.md`** — a Claude Code skill so agents re-authenticate to AWS on their
   own rather than stalling on an expired token. It is the only thing under `~/.claude` that this repo manages;
   the rest of that directory is work-specific and stays out.

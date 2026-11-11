@@ -2,7 +2,7 @@
   "env": {
     "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "64000"
   },
-  "model": "opus",
+  "model": "sonnet",
   "hooks": {
     "PreCompact": [
       {
@@ -40,7 +40,8 @@
     "slack@claude-plugins-official": true,
     "i-have-adhd@i-have-adhd": true,
     "claude-hud@claude-hud": true,
-    "cc-plugin-you-should-know@builtin": true
+    "cc-plugin-you-should-know@builtin": true,
+    "discord@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "cmux-tools": {

@@ -1,0 +1,10 @@
+[tools]
+bun = "latest"
+go = "latest"
+java = "zulu-11"
+node = "22"
+pipx = "latest"
+python = "latest"
+ruby = "latest"
+rust = "latest"
+uv = "latest"

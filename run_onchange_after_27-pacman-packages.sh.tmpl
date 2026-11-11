@@ -1,0 +1,14 @@
+{{ if and (eq .chezmoi.os "linux") (lookPath "pacman") -}}
+{{- $wsl := contains "microsoft" (lower .chezmoi.kernel.osrelease) -}}
+#!/bin/sh
+# Install the pacman packages in pacman-packages.txt. Sorts after 25-system-data-links, so
+# pacman's download cache is already on /data and a second install sharing the disk (dual
+# boot) installs from it without downloading again. Uses sudo. Re-runs when the list changes.
+# list hash: {{ include "pacman-packages.txt" | sha256sum }}
+set -eu
+sudo pacman -S --needed
+{{- range $line := include "pacman-packages.txt" | splitList "\n" }}
+{{- $name := regexReplaceAll "\\s*#.*$" $line "" | trim }}
+{{- if and $name (or $wsl (not (contains "# wsl" $line))) }} {{ $name }}{{ end }}
+{{- end }}
+{{ end -}}

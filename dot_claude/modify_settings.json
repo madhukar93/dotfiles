@@ -1,0 +1,8 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- /* Shared settings are in .chezmoitemplates/claude-settings.json. The live file's autoMode block (written by
+       /auto-mode-setup) is per machine and names local paths, so it is kept from the live file and never stored in this public repo. */ -}}
+{{- $settings := include ".chezmoitemplates/claude-settings.json" | fromJson -}}
+{{- $live := dict -}}
+{{- if .chezmoi.stdin }}{{ $live = fromJson .chezmoi.stdin }}{{ end -}}
+{{- if hasKey $live "autoMode" }}{{ $_ := set $settings "autoMode" $live.autoMode }}{{ end -}}
+{{ toPrettyJson "  " $settings }}

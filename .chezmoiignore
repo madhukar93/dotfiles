@@ -2,6 +2,7 @@ CLAUDE.md
 README.md
 GLOSSARY.md
 wsl
+pacman-packages.txt
 docs
 
 {{ if ne .chezmoi.os "darwin" -}}
