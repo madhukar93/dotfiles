@@ -12,7 +12,6 @@ cachyos-keyring
 cachyos-mirrorlist
 cachyos-niri-noctalia
 cachyos-zsh-config
-chatgpt-bin
 chezmoi
 clang
 claude-code
