@@ -36,8 +36,14 @@ set -e __brew
 
 # Start or attach to tmux in interactive shells only, never on macOS (herdr runs there
 # directly in the terminal), inside tmux, or in a herdr pane. Also skipped in Alacritty (it sets ALACRITTY=true in its [env] table).
+# Over SSH (sshd and Tailscale SSH set SSH_CONNECTION) a separate session "remote" is used, with its own windows,
+# so a login from another machine never resizes the windows of "main". A window has one size, so two terminals
+# viewing the same window would resize each other. To see main's windows from SSH: tmux attach -t main -d
 # Must come after Homebrew setup: tmux is installed by Homebrew.
 if status is-interactive; and test (uname) != Darwin; and not set -q TMUX; and not set -q ALACRITTY; and not set -q HERDR_ENV; and command -q tmux; and test "$TERM_PROGRAM" != vscode
+    if set -q SSH_CONNECTION
+        exec tmux new-session -A -s remote
+    end
     exec tmux new-session -A -s main
 end
 
