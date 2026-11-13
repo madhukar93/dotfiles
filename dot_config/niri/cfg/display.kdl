@@ -1,9 +1,9 @@
 // ────────────── Output Configuration ──────────────
 // You can run `niri msg outputs` to get the correct name for your displays.
-// You will have to remove "/-" and edit it before it takes effect.
 // https://github.com/YaLTeR/niri/wiki/Configuration:-Outputs
+// Matched by connector name (DP-4) so the monitor's serial number stays out of this public repo.
+// If the monitor moves to another port, change the name here.
 
-/- output "DP-1" {
-    mode "2560x1440@359.979" // Set resolution and refresh rate
-    scale 1 // No scaling (use 2 for HiDPI)
+output "DP-4" {
+    scale 1.5
 }
