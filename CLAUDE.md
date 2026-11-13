@@ -112,7 +112,8 @@ committed.
 - **`run_onchange_after_25-system-data-links.sh.tmpl`** — Linux only. `data-links` for root's folders, with
   `sudo`: the folders inside `/var/lib/flatpak` (flatpak's system-wide apps) except `exports`, and
   `/var/cache/pacman/pkg` (pacman's downloads), link to `/data`, so a dual-boot install on the same disk shares
-  them. `exports` and `flatpak-start-menu.service` keep flatpak apps in the Windows Start menu, and
+  them. A fresh install that shares `/data` gets menu links rebuilt (no download) for the apps already there, so
+  launchers list them. `exports` and `flatpak-start-menu.service` keep flatpak apps in the Windows Start menu, and
   `/usr/local/share/applications` links to `~/.local/share/applications` so AppImages added with Gear Lever
   appear there too. Details in `docs/wsl/toolchains-on-data.md`.
 - **`pacman-packages.txt`, `run_onchange_after_27-pacman-packages.sh.tmpl`** — Linux with pacman only. The

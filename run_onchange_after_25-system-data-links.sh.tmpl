@@ -64,6 +64,26 @@ link "$fp/runtime" /data/flatpak/runtime .
 link "$fp/repo" /data/flatpak/repo objects
 link "$fp/appstream" /data/flatpak/appstream
 link "$fp/.removed" /data/flatpak/.removed
+
+# flatpak apps that are already on /data (installed by another install that shares the disk)
+# have no menu entries here, because exports stays on the system disk. Launchers read only
+# exports, so they would not list the apps. Flatpak builds exports when it installs or updates
+# an app, so here each file an app offers (menu entry, icons, launcher command) gets a link
+# to the same file inside the app, as flatpak itself would make. Only missing links are made;
+# flatpak's own links are left alone. Remove the exports folder to undo.
+if command -v flatpak >/dev/null 2>&1 && [ -d /data/flatpak/app ]; then
+  for export in "$fp"/app/*/current/active/export; do
+    [ -d "$export/" ] || continue
+    while IFS= read -r -d '' file; do
+      linkpath="$fp/exports/${file#"$export"/}"
+      if [ -e "$linkpath" ] || [ -L "$linkpath" ]; then continue; fi
+      sudo mkdir -p "$(dirname "$linkpath")"
+      sudo ln -s "$(realpath -sm --relative-to="$(dirname "$linkpath")" "$file")" "$linkpath"
+      echo "link  ${linkpath#"$fp"/}"
+    done < <(find "$export/" \( -type f -o -type l \) -print0)
+  done
+fi
+
 link /var/cache/pacman/pkg /data/pacman-pkg
 
 # At WSL start the menu entries point into the not yet attached disk, so WSLg drops them.

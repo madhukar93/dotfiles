@@ -118,6 +118,18 @@ aside as `/var/lib/flatpak.before-data`, and two flatpak folders that both hold 
 | A second installation (`/etc/flatpak/installations.d/*.conf`) | Works, but every install needs `--installation=<name>`. |
 | Bind mount | Not needed: flatpak follows the symlink. |
 
+### Flatpak apps already on `/data` after a fresh install (2026-11-13)
+
+Because `exports` stays on the system disk, a second install that shares `/data` has all the apps and none of
+their menu entries. `flatpak list` shows them, but Noctalia's launcher does not (`/var/lib/flatpak/exports`
+did not exist). `flatpak repair` did not create it, and `flatpak repair --reinstall-all` would download about
+9 GB that `/data` already holds. `run_onchange_after_25-system-data-links.sh.tmpl` instead links each file an app
+offers (`share/applications`, `share/icons`, `share/metainfo`, `bin`) from `exports/` to the same file under
+`app/<id>/current/active/export/`, which is what flatpak does when it installs. It skips links that exist, so
+it changes nothing where flatpak already built them. Undo: `sudo rm -r /var/lib/flatpak/exports`.
+The script runs again only when it changes, so an app installed later by the other install gets its links here
+after a `flatpak update` (flatpak builds them itself) or an edit to the script.
+
 ### Flatpak apps in the Windows Start menu
 
 WSLg builds the Start menu from a fixed list of folders, including `/var/lib/flatpak/exports/share/applications`
