@@ -1,0 +1,28 @@
+{{ if and (eq .chezmoi.os "linux") (not (contains "microsoft" (lower .chezmoi.kernel.osrelease))) -}}
+#!/bin/bash
+# Let systemd-resolved own /etc/resolv.conf. CachyOS ships NetworkManager set to use
+# systemd-resolved (dns=systemd-resolved), but the installer can leave /etc/resolv.conf as
+# a plain file written by NetworkManager, and systemd never replaces an existing file.
+# Then resolved reports "resolv.conf mode: foreign" and Tailscale warns that MagicDNS names
+# will not resolve (https://tailscale.com/s/resolved-nm). Replace the file with the link to
+# resolved's stub file. The old file is kept as resolv.conf.before-resolved. Uses sudo.
+# Does nothing when resolved is not running or the link is already there, and skips WSL,
+# which writes its own resolv.conf. Re-runs only when this script changes.
+set -euo pipefail
+
+resolv=/etc/resolv.conf
+stub=/run/systemd/resolve/stub-resolv.conf
+
+command -v systemctl >/dev/null 2>&1 || exit 0
+systemctl is-active --quiet systemd-resolved || exit 0
+[ -e "$stub" ] || exit 0
+[ -L "$resolv" ] && exit 0
+
+sudo mv "$resolv" "$resolv.before-resolved"
+sudo ln -s "$stub" "$resolv"
+echo "link  $resolv -> $stub (old file kept as $resolv.before-resolved)"
+# NetworkManager rewrites resolv.conf on its own until restarted.
+if systemctl is-active --quiet NetworkManager; then
+  sudo systemctl restart NetworkManager
+fi
+{{ end -}}

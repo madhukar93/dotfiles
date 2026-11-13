@@ -116,6 +116,10 @@ committed.
   launchers list them. `exports` and `flatpak-start-menu.service` keep flatpak apps in the Windows Start menu, and
   `/usr/local/share/applications` links to `~/.local/share/applications` so AppImages added with Gear Lever
   appear there too. Details in `docs/wsl/toolchains-on-data.md`.
+- **`run_onchange_after_26-resolv-conf.sh.tmpl`** — Linux (not WSL) only. CachyOS has NetworkManager hand DNS to
+  systemd-resolved, but the installer can leave `/etc/resolv.conf` as a plain file, which makes Tailscale warn that
+  MagicDNS will not work. Replaces it with the link to resolved's stub file (old file kept as
+  `resolv.conf.before-resolved`) and restarts NetworkManager. Does nothing once the link exists.
 - **`pacman-packages.txt`, `run_onchange_after_27-pacman-packages.sh.tmpl`** — Linux with pacman only. The
   pacman packages every CachyOS machine gets (`sudo pacman -S --needed`); a line with a `# wsl` comment is
   installed only under WSL. Not deployed. Runs after 25 so pacman's cache is already on `/data`. The mise tool
