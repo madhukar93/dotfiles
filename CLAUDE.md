@@ -119,6 +119,9 @@ committed.
   pacman packages every CachyOS machine gets (`sudo pacman -S --needed`); a line with a `# wsl` comment is
   installed only under WSL. Not deployed. Runs after 25 so pacman's cache is already on `/data`. The mise tool
   list is `dot_config/mise/config.toml`.
+- **`aur-packages.txt`, `run_onchange_after_28-aur-packages.sh.tmpl`** — Linux with paru only. The AUR packages
+  (`paru -S --needed`, which shows each build file for review): the USB Wi-Fi dongle driver and niri's settings GUI.
+  Same `# wsl` comment rule as the pacman list. Not deployed.
 - **`run_onchange_after_50-install-sudo-mcp.sh.tmpl`** — Linux only. Builds sudo-mcp (an MCP server that runs
   `sudo` behind a password dialog) from `github.com/madhukar93/sudo-mcp` and registers it with
   `claude mcp add --scope user`. Needs `zenity` for the dialog.

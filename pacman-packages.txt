@@ -49,6 +49,7 @@ rsync
 sudo
 tailscale
 tealdeer
+ttf-0xproto-nerd
 ttf-fantasque-nerd
 unzip
 vim

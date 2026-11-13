@@ -1,0 +1,14 @@
+{{ if and (eq .chezmoi.os "linux") (lookPath "paru") -}}
+{{- $wsl := contains "microsoft" (lower .chezmoi.kernel.osrelease) -}}
+#!/bin/sh
+# Install the AUR packages in aur-packages.txt with paru. Runs after 27 (official packages),
+# because AUR builds need the base-devel toolchain from that list. paru shows each build file
+# for review before building; read it, do not skip the review. Re-runs when the list changes.
+# list hash: {{ include "aur-packages.txt" | sha256sum }}
+set -eu
+paru -S --needed
+{{- range $line := include "aur-packages.txt" | splitList "\n" }}
+{{- $name := regexReplaceAll "\\s*#.*$" $line "" | trim }}
+{{- if and $name (or $wsl (not (contains "# wsl" $line))) }} {{ $name }}{{ end }}
+{{- end }}
+{{ end -}}

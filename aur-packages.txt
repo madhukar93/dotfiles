@@ -1,0 +1,4 @@
+# AUR packages (built with paru). Installed by run_onchange_after_28-aur-packages.sh.tmpl.
+# A line with a "# wsl" comment is installed only under WSL. Not deployed.
+aic8800d80-dkms   # driver for the AIC8800D80 USB Wi-Fi dongle (368b:8d81); the internal Intel card is disabled
+niri-settings-git # graphical settings for niri

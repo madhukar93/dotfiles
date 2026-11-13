@@ -3,6 +3,7 @@ README.md
 GLOSSARY.md
 wsl
 pacman-packages.txt
+aur-packages.txt
 docs
 
 {{ if ne .chezmoi.os "darwin" -}}
