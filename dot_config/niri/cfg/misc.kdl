@@ -8,6 +8,9 @@
         QT_WAYLAND_DISABLE_WINDOWDECORATION "1"
         XDG_CURRENT_DESKTOP "niri"
         XDG_SESSION_TYPE "wayland"
+        // niri starts without this variable, so Noctalia would not see flatpak apps (their menu entries live in
+        // /var/lib/flatpak/exports/share). ~/.local/share is always searched on top of these.
+        XDG_DATA_DIRS "/var/lib/flatpak/exports/share:/usr/local/share:/usr/share"
     }
 
     cursor {

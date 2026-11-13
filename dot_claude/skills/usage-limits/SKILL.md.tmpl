@@ -1,0 +1,36 @@
+---
+name: usage-limits
+description: Pause long-running Claude work before the account reaches its usage limit. Use before starting background `claude -p` batches, eval runs, parallel subagents, or workflows; before raising parallelism; and when usage is near a limit.
+allowed-tools: Bash, Read
+---
+
+# Pausing work before the usage limit
+
+Madhukar switches Claude accounts when one nears its limit. Work that keeps spending while they are away must
+pause BEFORE the limit, not fail at it. Goal: every such job pauses at 90% of any window (5-hour, 7-day,
+per-model), or at 80% when usage rose 20 points in the last 15 minutes, and nothing is killed.
+
+## Steps
+
+1. **Read usage from Claude Code itself.** It takes about 2 seconds and spends no tokens:
+   `echo '{"type":"control_request","request_id":"u","request":{"subtype":"get_usage"}}' | claude -p --input-format stream-json --output-format stream-json --verbose`
+   Read `rate_limits` (5-hour, 7-day, per-model `utilization`, in percent) from the `control_response` line.
+   The status line and claude-hud snapshots lag: they update only while a session is active (2026-10-06: the
+   status line read 83% while real usage reached 100%, so the pause never fired).
+   Done when you have a percent for every window.
+2. **Before starting the work, start a watcher** that pauses it at the threshold above. Pausing has two parts:
+   a pause file that the work checks before each model call (stops new steps), then `SIGSTOP` to the running
+   processes (a step already talking to the model finishes, and nothing is killed). Then notify Madhukar.
+{{- if .work }}
+   Example to copy: `claude-code-plugins` repo, `plugins/engineering/skills/trd/evals/usage_guard.py`
+   (`watch --at 90`, `resume`, `status`).
+{{- end }}
+   Done when the watcher is running and you have told Madhukar how to check it.
+3. **Count only running time against time limits.** A wall-clock step timeout fires on resume and kills work that
+   had finished (2026-10-06: a two-day pause crashed 14 eval batches on resume). Either time limits count running
+   time only, or the pause stops processes only between steps.
+4. **Before raising parallelism, read usage again.** Many parallel runs use a 5-hour window in minutes (8 parallel
+   Opus eval runs went from 49% to 100% in about 12 minutes).
+5. **Resume only when Madhukar says they switched accounts.** Remove the pause file and send `SIGCONT`.
+   A step that failed on a usage-limit error produced no result: mark it and re-run it.
+   Done when no step is marked failed-on-limit.

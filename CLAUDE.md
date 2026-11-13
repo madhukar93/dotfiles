@@ -144,9 +144,14 @@ committed.
 - **`dot_claude/modify_settings.json`** — builds `~/.claude/settings.json` from `.chezmoitemplates/claude-settings.json`
   and keeps the live file's `autoMode` block (per machine, written by `/auto-mode-setup`, names local paths, so it
   never enters this public repo). `chezmoi add` does not work on this file: edit `.chezmoitemplates/claude-settings.json`.
+  That template enables the `i-have-adhd` plugin; `dot_claude/empty_dot_i-have-adhd-always` (an empty file) is the
+  plugin's opt-in flag that makes its reply style apply in every session. Delete `~/.claude/.i-have-adhd-always` to turn it off.
 - **`dot_claude/skills/aws-login/SKILL.md`** — a Claude Code skill so agents re-authenticate to AWS on their
-  own rather than stalling on an expired token. It is the only thing under `~/.claude` that this repo manages;
-  the rest of that directory is work-specific and stays out.
+  own rather than stalling on an expired token.
+- **`dot_claude/skills/usage-limits/SKILL.md.tmpl`** — a Claude Code skill that pauses long-running work (background
+  `claude -p` batches, eval runs, parallel subagents, workflows) at 90% of any usage window, before the account runs
+  out. `dot_claude/CLAUDE.md.tmpl` (the global instructions) only points to it, so those rules load only when needed.
+  `.chezmoiignore` lists each shared skill with a `!` line; every other skill in `~/.claude/skills` stays local.
 
 ## Working in this repo
 

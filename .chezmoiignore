@@ -23,6 +23,7 @@ docs
 # ~/.claude/skills (third-party installs, work skills, downloaded caches) stays local.
 .claude/skills/*
 !.claude/skills/aws-login
+!.claude/skills/usage-limits
 
 # Links and blocks that fish's theme-sync rewrites when the system switches
 # between light and dark mode. chezmoi ships the light and dark files; theme-sync
