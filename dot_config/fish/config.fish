@@ -35,9 +35,9 @@ end
 set -e __brew
 
 # Start or attach to tmux in interactive shells only, never on macOS (herdr runs there
-# directly in the terminal), inside tmux, or in a herdr pane.
+# directly in the terminal), inside tmux, or in a herdr pane. Also skipped in Alacritty (it sets ALACRITTY=true in its [env] table).
 # Must come after Homebrew setup: tmux is installed by Homebrew.
-if status is-interactive; and test (uname) != Darwin; and not set -q TMUX; and not set -q HERDR_ENV; and command -q tmux; and test "$TERM_PROGRAM" != vscode
+if status is-interactive; and test (uname) != Darwin; and not set -q TMUX; and not set -q ALACRITTY; and not set -q HERDR_ENV; and command -q tmux; and test "$TERM_PROGRAM" != vscode
     exec tmux new-session -A -s main
 end
 
