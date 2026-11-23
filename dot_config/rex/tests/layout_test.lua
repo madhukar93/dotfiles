@@ -62,5 +62,18 @@ check("pane not in the view: nothing to do",
 check("no view (session.view failed): nothing to do",
   layout.plan_flip(nil, "A"), nil)
 
+-- rect_of
+local function rleaf(id, rect) return { block_id = id, rect = rect } end
+local rect_a, rect_b = { 0, 0, 0.5, 1 }, { 0.5, 0, 0.5, 1 }
+local rview = { windows = { { window_id = "W", layers = {
+  { kind = "tiled", layout = split("horizontal", rleaf("A", rect_a), rleaf("B", rect_b)) },
+  { kind = "floating", layout = rleaf("F", { 0.1, 0.1, 0.8, 0.8 }) },
+} } } }
+local rect, window_id = layout.rect_of(rview, "B")
+check("rect_of finds a tiled pane's rectangle", { rect = rect }, { rect = rect_b })
+check("rect_of returns the pane's window", { w = window_id }, { w = "W" })
+check("rect_of ignores floating panes", layout.rect_of(rview, "F") and {} or nil, nil)
+check("rect_of: unknown pane", layout.rect_of(rview, "Z") and {} or nil, nil)
+
 print(string.format("%d checks, %d failed", count, failures))
 os.exit(failures == 0 and 0 or 1)

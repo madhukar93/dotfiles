@@ -105,6 +105,96 @@ end
 rex.action{ name = "extrakto", title = "Extract Text from Pane", run = extrakto }
 rex.bind(P .. ">shift+e", extrakto)
 
+-- Hint picker, like tmux-thumbs / tmux-fingers (~/.config/rex/bin/rex-hints): letter hints over the
+-- pane's paths, URLs, hashes and numbers.
+--   copy (prefix shift+f): the picker takes the keys; a hint copies, an uppercase hint types into the pane.
+--   jump (prefix g): the picker only displays; Rex's "jump" key mode takes the hint keys, because only
+--   an action run by the app can move the copy-mode cursor, and an action must not wait for typing.
+local hints = require("hints")
+local hint_keys = "asdfqwerzxcvjklmiuopghtybn" -- same order as ALPHABET in bin/rex-hints
+local hints_bin = os.getenv("HOME") .. "/.config/rex/bin/rex-hints"
+local hints_result = os.getenv("HOME") .. "/.local/state/rex/hints-result.json"
+local jump_state = os.getenv("HOME") .. "/.local/state/rex/hints-jump.json"
+
+local function read_json(path)
+  local f = io.open(path, "r")
+  if not f then return nil end
+  local ok, value = pcall(rex.json.decode, f:read("*a"))
+  f:close()
+  return ok and value or nil
+end
+
+local function write_json(path, value)
+  local f = io.open(path, "w")
+  if f then f:write(rex.json.encode(value)) f:close() end
+end
+
+rex.action{
+  name = "hints", title = "Hint Picker",
+  args = { mode = "string?" },
+  run = function(ctx, args)
+    local view = rex.call("session.view", { session_id = ctx.session_id })
+    local rect, window_id = layout.rect_of(view, ctx.block_id)
+    if not rect then return "no rect for pane" end
+    local jump = args.mode == "jump"
+    local command = { hints_bin, ctx.session_id, ctx.block_id, hints_result }
+    if jump then command[#command + 1] = "--show" end
+    os.remove(hints_result)
+    local layer = rex.call("session.new_layer", {
+      session_id = ctx.session_id, window_id = window_id, focus = not jump, bounds = rect,
+      layout = { block = { flavor = "com.superlogical.terminal.shell", label = "hints", options = { command = command } } },
+    })
+    if not jump or not layer then return jump and "new_layer failed" or nil end
+    -- With nothing to jump to, the picker says so and closes; entering the mode would trap the keyboard.
+    local dump = rex.exec({ hints_bin, ctx.session_id, ctx.block_id, "/dev/null", "--dump" }, { timeout = 5 })
+    local ok, found = pcall(rex.json.decode, dump and dump.stdout or "")
+    if not ok or type(found) ~= "table" or #found == 0 then return "no matches" end
+    write_json(jump_state, { picker = layer.block_ids[1], typed = "" })
+    rex.client.queue("client.mode.enter", { name = "jump" .. math.min(#found, #hint_keys) })
+  end,
+}
+
+rex.action{
+  name = "hints_jump", title = "Jump to Hint",
+  args = { key = "string" },
+  run = function(ctx, args)
+    local state = read_json(jump_state) or {}
+    local function finish()
+      if state.picker then rex.call("block.close", { session_id = ctx.session_id, block_id = state.picker }) end
+      os.remove(jump_state)
+      rex.client.queue("client.mode.exit")
+    end
+    if args.key == "esc" then return finish() end
+    local typed = (state.typed or "") .. args.key
+    local match = hints.resolve((read_json(hints_result) or {}).matches, typed)
+    if match == "partial" or not match then
+      state.typed = match and typed or "" -- a key that fits no hint starts over
+      return write_json(jump_state, state)
+    end
+    finish()
+    rex.client.queue("pane.copy_mode.enter")
+    rex.client.queue("pane.copy_mode.move", { to = "screen_top" })
+    if match.row > 0 then rex.client.queue("pane.copy_mode.move", { to = "down", count = match.row }) end
+    rex.client.queue("pane.copy_mode.move", { to = "line_start" })
+    if match.col > 0 then rex.client.queue("pane.copy_mode.move", { to = "right", count = match.col }) end
+  end,
+}
+
+-- Mode keys can only be bound when the config loads, and Rex's key list shows every key of the
+-- active mode. So there is one mode per number of hints: jump3 binds only the 3 letters in use.
+for n = 1, #hint_keys do
+  local mode = "jump" .. n
+  rex.mode(mode, { exclusive = true })
+  for i = 1, n do
+    local key = hint_keys:sub(i, i)
+    rex.bind(mode .. "/" .. key, "hints_jump", { key = key })
+  end
+  rex.bind(mode .. "/escape", "hints_jump", { key = "esc" })
+end
+
+rex.bind(P .. ">shift+f", "hints", { mode = "copy" })
+rex.bind(P .. ">g", "hints", { mode = "jump" })
+
 rex.bind(P .. ">v", "pane.split", { direction = "right" })
 rex.bind(P .. ">s", "pane.split", { direction = "down" })
 rex.bind(P .. ">l", "pane.send_key", { key = "ctrl+l" })

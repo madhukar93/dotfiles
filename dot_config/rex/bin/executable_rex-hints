@@ -1,0 +1,192 @@
+#!/usr/bin/env -S python3 -I
+"""Letter hints over a Rex pane's screen, like tmux-thumbs and tmux-fingers.
+
+Usage: rex-hints SESSION_ID BLOCK_ID RESULT_FILE [--show | --dump]
+  hint letters            copy the match to the clipboard
+  hint letters, any upper type the match into the pane
+  esc or q                cancel
+  --show  only display the hints and write the matches to RESULT_FILE; Rex's "jump" key mode
+          (init.lua) reads the hint keys, moves the copy-mode cursor and closes this pane
+  --dump  print the matches as JSON and exit (for testing)
+Without --show, RESULT_FILE gets the pick as one JSON object, {} when cancelled.
+"""
+import json
+import os
+import re
+import select
+import subprocess
+import sys
+import time
+
+# Panes have REX_BIN_DIR; a command the Rex server runs for an action does not.
+REX = next(p for p in (
+    os.path.join(os.environ.get("REX_BIN_DIR", "/nonexistent"), "rex"),
+    os.path.expanduser("~/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS/rex"),
+    "rex") if p == "rex" or os.path.isfile(p))
+
+# Tried in this order at each position; adapted from tmux-thumbs (MIT licence).
+PATTERNS = [
+    ("url", r"(?:https?://|git@|git://|ssh://|ftp://|file:///)[^\s'\"<>()\[\]{}]+"),
+    ("uuid", r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"),
+    ("path", r"(?:[.\w\-@~]+)?(?:/[.\w\-@]+)+/?"),
+    ("ip", r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(?::\d+)?"),
+    ("sha", r"\b[0-9a-f]{7,40}\b"),
+    ("hex", r"0x[0-9a-fA-F]+"),
+    ("number", r"\b\d{4,}\b"),
+]
+MATCHER = re.compile("|".join(f"(?P<{name}>{rx})" for name, rx in PATTERNS))
+ALPHABET = "asdfqwerzxcvjklmiuopghtybn"  # home row first, as tmux-thumbs' qwerty set
+
+
+def find_matches(lines):
+    """Matches in reading order: dicts with row, col (both from 0), text and kind."""
+    out = []
+    for row, line in enumerate(lines):
+        for m in MATCHER.finditer(line):
+            out.append({"row": row, "col": m.start(), "text": m.group(), "kind": m.lastgroup})
+    return out
+
+
+def assign_hints(matches):
+    """Gives each match a hint. Matches nearest the bottom of the screen get the easiest keys.
+    One letter each while they fit the alphabet, else two letters each, so no hint starts another."""
+    n = len(matches)
+    if n <= len(ALPHABET):
+        hints = list(ALPHABET[:n])
+    else:
+        hints = [a + b for a in ALPHABET for b in ALPHABET][:n]
+    for m, hint in zip(reversed(matches), hints):
+        m["hint"] = hint
+    return matches
+
+
+def render(lines, matches, typed, width, height, status=""):
+    """The screen text with each match highlighted and its hint drawn over its first characters.
+    status, when given, covers the bottom row."""
+    by_row = {}
+    for m in matches:
+        by_row.setdefault(m["row"], []).append(m)
+    out = ["\x1b[H\x1b[2J"]
+    top = max(0, len(lines) - height)  # with fewer rows than the pane, keep the bottom of its screen
+    for row, line in enumerate(lines[top:], start=top):
+        pos, parts = 0, []
+        for m in by_row.get(row, []):
+            if not m["hint"].startswith(typed):
+                continue  # ruled out by what was typed so far
+            parts.append("\x1b[2m" + line[pos:m["col"]] + "\x1b[0m")
+            hint = m["hint"][:len(m["text"])]
+            parts.append("\x1b[1;30;43m" + hint + "\x1b[0;33m" + m["text"][len(hint):] + "\x1b[0m")
+            pos = m["col"] + len(m["text"])
+        parts.append("\x1b[2m" + line[pos:] + "\x1b[0m")
+        # shortcut: counts characters, not display cells, so wide characters shift hints; switch to wcwidth if that bites
+        out.append("\x1b[%d;1H%s" % (row - top + 1, "".join(parts)) if len(line) <= width else
+                   "\x1b[%d;1H\x1b[2m%s\x1b[0m" % (row - top + 1, line[:width]))
+    if status:
+        out.append("\x1b[%d;1H\x1b[0;7m%s\x1b[0m" % (height, status[:width].ljust(width)))
+    return "".join(out)
+
+
+def show(lines, matches, status, seconds):
+    """Displays the hints without reading keys, until this pane is closed or seconds pass."""
+    drawn, deadline = None, time.monotonic() + seconds
+    sys.stdout.write("\x1b[?25l")
+    while time.monotonic() < deadline:
+        size = os.get_terminal_size()
+        if drawn != size:
+            sys.stdout.write(render(lines, matches, "", size.columns, size.lines, status))
+            sys.stdout.flush()
+            drawn = size
+        time.sleep(0.1)
+
+
+def pick(lines, matches, status, timeout=None):
+    """Runs the hint screen. Returns (match, typed_upper) or (None, False); gives up after timeout seconds."""
+    import termios
+    import tty
+    fd = sys.stdin.fileno()
+    saved = termios.tcgetattr(fd)
+    typed, upper, drawn = "", False, None
+    deadline = time.monotonic() + timeout if timeout else None
+    try:
+        tty.setraw(fd)
+        sys.stdout.write("\x1b[?25l")
+        while True:
+            size = os.get_terminal_size()  # Rex resizes the floating pane shortly after it starts
+            if drawn != (size, typed):
+                sys.stdout.write(render(lines, matches, typed, size.columns, size.lines, status))
+                sys.stdout.flush()
+                drawn = (size, typed)
+            if deadline and time.monotonic() > deadline:
+                return None, False
+            if not select.select([fd], [], [], 0.1)[0]:
+                continue
+            ch = os.read(fd, 1).decode(errors="ignore")
+            if ch in ("\x1b", "q", "\x03", ""):
+                return None, False
+            if not ch.isalpha():
+                continue
+            upper = upper or ch.isupper()
+            typed += ch.lower()
+            live = [m for m in matches if m["hint"].startswith(typed)]
+            if not live:
+                typed, upper = "", False
+            elif len(live) == 1 and live[0]["hint"] == typed:
+                return live[0], upper
+    finally:
+        sys.stdout.write("\x1b[?25h\x1b[0m\x1b[H\x1b[2J")
+        sys.stdout.flush()
+        termios.tcsetattr(fd, termios.TCSADRAIN, saved)
+
+
+def screen_lines(session, block):
+    """The pane's visible screen: the last `rows` lines of its capture."""
+    def call(method):
+        r = subprocess.run([REX, "api", "call", "-s", session, method, json.dumps({"block_id": block})],
+                           capture_output=True, text=True)
+        return json.loads(r.stdout) if r.returncode == 0 and r.stdout.strip() else {}
+    rows = call("com.superlogical.terminal.size").get("rows", 24)
+    text = subprocess.run([REX, "capture", "-s", session, "-b", block], capture_output=True, text=True).stdout
+    return text.split("\n")[:-1][-rows:]
+
+
+def main():
+    session, block, result_file = sys.argv[1:4]
+    lines = screen_lines(session, block)
+    matches = assign_hints(find_matches(lines))
+    if "--dump" in sys.argv:
+        print(json.dumps(matches))
+        return
+    if "--show" in sys.argv:
+        with open(result_file, "w") as f:
+            json.dump({"matches": matches}, f)
+        if matches:
+            show(lines, matches, f" {len(matches)} hints: type one to jump to it   esc: cancel ", 60)
+        else:
+            print("\x1b[H\x1b[2J\x1b[7m no paths, URLs, hashes or numbers on this screen \x1b[0m", flush=True)
+            time.sleep(1.2)
+        return
+    result = {}
+    try:
+        if matches:
+            status = f" {len(matches)} hints: type one to copy it (uppercase: type it into the pane)   esc: cancel "
+            match, upper = pick(lines, matches, status)
+        else:
+            print("\x1b[H\x1b[2J\x1b[7m no paths, URLs, hashes or numbers on this screen \x1b[0m", flush=True)
+            time.sleep(1.2)
+            match, upper = None, False
+        if match:
+            result = {"row": match["row"], "col": match["col"], "text": match["text"]}
+            if upper:
+                subprocess.run([REX, "api", "call", "-s", session, "com.superlogical.terminal.write",
+                                json.dumps({"block_id": block, "args": {"data": match["text"]}})],
+                               capture_output=True)
+            else:
+                subprocess.run(["pbcopy"], input=match["text"], text=True)
+    finally:
+        with open(result_file, "w") as f:
+            json.dump(result, f)
+        subprocess.run([REX, "focus", "-s", session, block], capture_output=True)
+
+
+if __name__ == "__main__":
+    main()

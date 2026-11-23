@@ -33,4 +33,19 @@ function M.plan_flip(view, block_id)
   end
 end
 
+-- Returns a block's rectangle in its window, as session.view gives it ({x, y, w, h} in fractions
+-- of the window), and the window's ID; nil when the block is not in a tiled layout.
+function M.rect_of(view, block_id)
+  local function find(node)
+    if node.block_id == block_id then return node.rect end
+    if node.split then return find(node.split.before) or find(node.split.after) end
+  end
+  for _, w in ipairs(view and view.windows or {}) do
+    for _, layer in ipairs(w.layers or {}) do
+      local rect = layer.kind == "tiled" and layer.layout and find(layer.layout)
+      if rect then return rect, w.window_id end
+    end
+  end
+end
+
 return M
