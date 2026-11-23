@@ -77,6 +77,21 @@ rex.bind("alt+h", "vim_or_resize", { key = "alt+h", direction = "left" })
 rex.bind("alt+j", "vim_or_resize", { key = "alt+j", direction = "down" })
 rex.bind("alt+k", "vim_or_resize", { key = "alt+k", direction = "up" })
 rex.bind("alt+l", "vim_or_resize", { key = "alt+l", direction = "right" })
+-- Change split direction: side by side <-> stacked, for the focused pane and its neighbour.
+local layout = require("layout")
+
+local function split_flip(ctx)
+  local view = rex.call("session.view", { session_id = ctx.session_id })
+  local move = layout.plan_flip(view, ctx.block_id)
+  if not move then return end
+  move.session_id = ctx.session_id
+  rex.call("session.move_block", move)
+end
+
+rex.action{ name = "split_flip", title = "Change Split Direction", run = split_flip }
+-- Bound to the function, not the action name: key presses only reach Lua bound as a function.
+rex.bind(P .. ">space", function(ctx) split_flip(ctx) return true end)
+
 rex.bind(P .. ">v", "pane.split", { direction = "right" })
 rex.bind(P .. ">s", "pane.split", { direction = "down" })
 rex.bind(P .. ">l", "pane.send_key", { key = "ctrl+l" })
