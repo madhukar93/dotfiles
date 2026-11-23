@@ -1,0 +1,73 @@
+#!/usr/bin/env -S python3 -I
+"""Pick text from a Rex pane with fzf, like tmux's extrakto plugin.
+
+Usage: rex-extrakto SESSION_ID BLOCK_ID [--list [lines]]
+  enter   types the choice into the pane
+  ctrl-y  copies the choice to the clipboard
+  tab     switches between everything and whole lines only
+  --list  prints the candidates and exits (used by tab, and for testing)
+"""
+import json
+import os
+import re
+import shlex
+import subprocess
+import sys
+
+REX = os.path.join(os.environ.get("REX_BIN_DIR", ""), "rex") if os.environ.get("REX_BIN_DIR") else "rex"
+URL = re.compile(r"(?:https?|ftp|file)://[^\s'\"<>()\[\]{}]+")
+TRIM = "'\"`()[]{}<>,;:."
+
+
+def candidates(text, kind="all"):
+    """Most recent first, no duplicates: URLs, then paths, then words, then lines; or lines only."""
+    lines = [l.rstrip() for l in text.splitlines() if l.strip()][::-1]
+    if kind == "lines":
+        return list(dict.fromkeys(l.strip() for l in lines))
+    urls, paths, words = [], [], []
+    for line in lines:
+        urls += URL.findall(line)
+        for tok in line.split():
+            tok = tok.strip(TRIM)
+            if len(tok) < 3:
+                continue
+            (paths if "/" in tok and not URL.match(tok) else words).append(tok)
+    seen, out = set(), []
+    for item in urls + paths + words + [l.strip() for l in lines]:
+        if item not in seen:
+            seen.add(item)
+            out.append(item)
+    return out
+
+
+def main():
+    session, block = sys.argv[1], sys.argv[2]
+    text = subprocess.run([REX, "capture", "-s", session, "-b", block],
+                          capture_output=True, text=True).stdout
+    if "--list" in sys.argv:
+        print("\n".join(candidates(text, "lines" if sys.argv[-1] == "lines" else "all")))
+        return
+    items = candidates(text)
+    me = " ".join(shlex.quote(a) for a in (sys.argv[0], session, block, "--list"))
+    toggle = (f'tab:transform:[ "$FZF_PROMPT" = "all> " ] '
+              f'&& echo "reload({me} lines)+change-prompt(lines> )" '
+              f'|| echo "reload({me})+change-prompt(all> )"')
+    fzf = subprocess.run(
+        ["fzf", "--expect=ctrl-y", "--no-sort", "--reverse", "--prompt=all> ", "--bind", toggle,
+         "--header=enter: type into pane   ctrl-y: copy   tab: lines only / everything   esc: cancel"],
+        input="\n".join(items), capture_output=True, text=True)
+    out = fzf.stdout.split("\n")
+    if fzf.returncode != 0 or len(out) < 2 or not out[1]:
+        return  # cancelled; exit 0 so Rex closes the floating pane
+    key, choice = out[0], out[1]
+    if key == "ctrl-y":
+        subprocess.run(["pbcopy"], input=choice, text=True)
+    else:
+        subprocess.run([REX, "api", "call", "-s", session, "com.superlogical.terminal.write",
+                        json.dumps({"block_id": block, "args": {"data": choice}})],
+                       capture_output=True)
+    subprocess.run([REX, "focus", "-s", session, block], capture_output=True)
+
+
+if __name__ == "__main__":
+    main()

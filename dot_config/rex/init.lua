@@ -92,6 +92,19 @@ rex.action{ name = "split_flip", title = "Change Split Direction", run = split_f
 -- Bound to the function, not the action name: key presses only reach Lua bound as a function.
 rex.bind(P .. ">space", function(ctx) split_flip(ctx) return true end)
 
+-- extrakto: pick a word, path, URL or line from the pane in a floating fzf (~/.config/rex/bin/rex-extrakto).
+local function extrakto(ctx)
+    rex.call("session.new_layer", {
+      session_id = ctx.session_id, focus = true, bounds = { 0.1, 0.1, 0.8, 0.8 },
+      layout = { block = { flavor = "com.superlogical.terminal.shell", label = "extrakto", options = {
+        command = { os.getenv("HOME") .. "/.config/rex/bin/rex-extrakto", ctx.session_id, ctx.block_id },
+      } } },
+    })
+    return true
+end
+rex.action{ name = "extrakto", title = "Extract Text from Pane", run = extrakto }
+rex.bind(P .. ">shift+e", extrakto)
+
 rex.bind(P .. ">v", "pane.split", { direction = "right" })
 rex.bind(P .. ">s", "pane.split", { direction = "down" })
 rex.bind(P .. ">l", "pane.send_key", { key = "ctrl+l" })
