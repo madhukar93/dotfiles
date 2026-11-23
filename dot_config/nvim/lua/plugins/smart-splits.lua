@@ -1,5 +1,6 @@
 return {
   "mrjones2014/smart-splits.nvim",
+  tag = "v2.1.1-final",
   lazy = false,
   opts = {
     ignored_filetypes = {
@@ -9,6 +10,14 @@ return {
       "prompt",
     },
     ignored_buftypes = { "nofile" },
+    -- At the last Neovim split: inside Rex (and not tmux), move to the next Rex pane; otherwise wrap.
+    at_edge = function(ctx)
+      if vim.env.REX_SESSION and not vim.env.TMUX then
+        vim.system({ "rex", "focus", "-s", vim.env.REX_SESSION, ctx.direction })
+      else
+        ctx.wrap()
+      end
+    end,
   },
   keys = {
     {
