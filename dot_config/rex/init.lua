@@ -37,6 +37,46 @@ rex.bind("repeat/ctrl+h", "client.tab.previous")
 rex.bind(P .. ">ctrl+l", "client.tab.next")
 rex.bind("repeat/ctrl+l", "client.tab.next")
 
+-- ~/.tmux.conf.local, loaded after ~/.tmux.conf
+-- Like tmux's #{@pane-is-vim} check: keys go to (Neo)vim when it runs in the pane.
+local function pane_runs_vim(ctx)
+  local res = rex.call("com.superlogical.terminal.process",
+    { session_id = ctx.session_id, block_id = ctx.block_id, args = {} })
+  local name = res and res.foreground and res.foreground.name
+  return name == "nvim" or name == "vim"
+end
+
+-- Keys are bound to functions, not action names: key presses only reach Lua bound as a function.
+-- Returning false passes the key on to the pane; returning true keeps it.
+local function vim_or_focus(direction)
+  return function(ctx)
+    if pane_runs_vim(ctx) then return false end
+    rex.call("session.focus_direction", { session_id = ctx.session_id, direction = direction })
+    return true
+  end
+end
+
+-- Client actions (pane.resize, pane.send_key) can only be queued by an action, never by a key function.
+rex.action{
+  name = "vim_or_resize", title = "Send Key to Vim or Resize Pane",
+  args = { key = "string", direction = "string" },
+  run = function(ctx, args)
+    if pane_runs_vim(ctx) then
+      rex.client.queue("pane.send_key", { key = args.key })
+    else
+      rex.client.queue("pane.resize", { amount = 3, direction = args.direction })
+    end
+  end,
+}
+
+rex.bind("ctrl+h", vim_or_focus("left"))
+rex.bind("ctrl+j", vim_or_focus("down"))
+rex.bind("ctrl+k", vim_or_focus("up"))
+rex.bind("ctrl+l", vim_or_focus("right"))
+rex.bind("alt+h", "vim_or_resize", { key = "alt+h", direction = "left" })
+rex.bind("alt+j", "vim_or_resize", { key = "alt+j", direction = "down" })
+rex.bind("alt+k", "vim_or_resize", { key = "alt+k", direction = "up" })
+rex.bind("alt+l", "vim_or_resize", { key = "alt+l", direction = "right" })
 rex.bind(P .. ">v", "pane.split", { direction = "right" })
 rex.bind(P .. ">s", "pane.split", { direction = "down" })
 rex.bind(P .. ">l", "pane.send_key", { key = "ctrl+l" })
@@ -81,4 +121,9 @@ rex.bind(P .. ">right", "client.tab.move", { direction = "forward" })
 rex.bind(P .. ">p", "client.tab.previous")
 rex.bind(P .. ">n", "client.tab.next")
 rex.bind(P .. ">/", "client.find.open")
+-- smart-splits.nvim resize keys (META is alt); its resize step is 3
+rex.bind("alt+left", "vim_or_resize", { key = "alt+left", direction = "left" })
+rex.bind("alt+down", "vim_or_resize", { key = "alt+down", direction = "down" })
+rex.bind("alt+up", "vim_or_resize", { key = "alt+up", direction = "up" })
+rex.bind("alt+right", "vim_or_resize", { key = "alt+right", direction = "right" })
 
