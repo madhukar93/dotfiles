@@ -285,3 +285,16 @@ rex.action{
 }
 rex.bind(P .. ">u", "jump_waiting_agent")
 
+-- cmd shortcuts, alongside the ctrl+a ones above. Programs in a pane never receive cmd keys.
+-- Left alone so the app and macOS keep them: cmd+t/w/n/q/h/m/f/k/,/0-9 and copy/paste keys.
+rex.bind("cmd+d", "pane.split", { direction = "right" })
+rex.bind("shift+cmd+d", "pane.split", { direction = "down" })
+rex.bind("cmd+[", "pane.focus_previous")
+rex.bind("cmd+]", "pane.focus_next")
+rex.bind("shift+cmd+[", "client.tab.previous")
+rex.bind("shift+cmd+]", "client.tab.next")
+rex.bind("shift+cmd+enter", "pane.zoom")
+rex.bind("cmd+u", "jump_waiting_agent")
+rex.bind("shift+cmd+p", "client.palette.toggle")
+rex.bind("cmd+e", extrakto)
+rex.bind("shift+cmd+,", "client.config.reload")
