@@ -6,6 +6,13 @@ local P = "ctrl+a"
 -- The prefix key passes through to programs that use it.
 rex.bind(P .. ">ctrl+a", "pane.send_key", { key = "ctrl+a" })
 
+-- Font size: cmd+= and cmd+- change Rex's default size, so every new pane opens at the last size picked.
+-- Panes without their own size follow along; cmd+0 (Rex's built-in) clears a pane's own size.
+-- Two setting steps equal one step of Rex's per-pane font keys.
+rex.bind("cmd+=", "client.setting.terminal.typography.size", { increase = 2 })
+rex.bind("shift+cmd+=", "client.setting.terminal.typography.size", { increase = 2 })
+rex.bind("cmd+-", "client.setting.terminal.typography.size", { decrease = 2 })
+
 -- tmux: ~/.tmux.conf and ~/.tmux.conf.local
 rex.mode("repeat", { exclusive = true })
 rex.bind(P .. ">ctrl+r", "client.mode.enter", { name = "repeat" })
