@@ -4,3 +4,4 @@
 
 -- tmux integration only inside tmux; elsewhere (Rex) smart-splits uses its at_edge function
 vim.g.smart_splits_multiplexer_integration = vim.env.TMUX and "tmux" or false
+vim.opt.relativenumber = false
