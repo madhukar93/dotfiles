@@ -252,3 +252,36 @@ rex.bind("alt+down", "vim_or_resize", { key = "alt+down", direction = "down" })
 rex.bind("alt+up", "vim_or_resize", { key = "alt+up", direction = "up" })
 rex.bind("alt+right", "vim_or_resize", { key = "alt+right", direction = "right" })
 
+-- Jump to the next agent waiting for you (blocked, error or done), across all sessions, like cmux.
+-- Order and "seen" rules are in agents.lua.
+local agents = require("agents")
+local agents_seen = {}
+rex.action{
+  name = "jump_waiting_agent", title = "Jump to Next Waiting Agent",
+  run = function(ctx)
+    local panes = {}
+    local sessions = rex.call("session.list", {})
+    for _, s in ipairs(sessions and sessions.sessions or {}) do
+      -- Reading another session's panes needs this connection attached to it.
+      rex.call("session.attach", { session_id = s.session_id })
+      local list = rex.call("session.list_blocks", { session_id = s.session_id })
+      for _, b in ipairs(list and list.blocks or {}) do
+        if b.creator_name == "com.superlogical.terminal" and b.placement == "placed" then
+          local reply = rex.call("com.superlogical.terminal.program_status",
+            { session_id = s.session_id, block_id = b.block_id, args = {} })
+          local st = agents.pane_state(reply)
+          if st then
+            panes[#panes + 1] = { session_id = s.session_id, window_id = b.window_id,
+              block_id = b.block_id, rank = st.rank, updated_at = st.updated_at }
+          end
+        end
+      end
+    end
+    local target = agents.jump(panes, ctx.block_id, agents_seen)
+    if not target then return end
+    rex.call("session.focus_block", { session_id = target.session_id, block_id = target.block_id })
+    rex.client.queue("session.select", { session_id = target.session_id, window_id = target.window_id })
+  end,
+}
+rex.bind(P .. ">u", "jump_waiting_agent")
+
