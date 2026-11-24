@@ -1,0 +1,1 @@
+{ "name": "sessions", "version": "0.17.0", "description": "Adds /sessions: a list of recent sessions with each latest recap; choosing one runs the built-in /resume.", "types": "./types/index.d.ts" }
